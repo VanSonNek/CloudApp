@@ -12,6 +12,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
 <BorderPane prefHeight="750" prefWidth="1200" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.demo.DashboardController">
 
@@ -112,21 +113,43 @@
 
             </VBox>
 
+            <!-- Spacer đẩy Upgrade Card xuống cuối sidebar -->
+            <Region VBox.vgrow="ALWAYS" />
 
             <!-- Upgrade Card -->
-            <VBox spacing="10" style="-fx-background-color: #E6F2FF; -fx-background-radius: 12;">
-                <padding>
-                    <Insets bottom="20" left="20" right="20" top="20" />
-                </padding>
+            <VBox prefWidth="180" spacing="20" style="-fx-background-color: #FFFFFF;">
 
-                <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="64% Used" />
-                <Label text="640 GB of 1000 GB Used" />
-                <Button prefWidth="150" style="-fx-background-color: #1976D2; -fx-text-fill: white; -fx-background-radius: 12;" text="Upgrade Now" />
+                <!-- Các menu buttons ở đây -->
+
+                <!-- Upgrade Card -->
+                <VBox prefHeight="220.0" prefWidth="200.0" spacing="10" style="-fx-background-color: #3ea9f0; -fx-background-radius: 12;">
+                    <padding>
+                        <Insets bottom="20" left="20" right="20" top="20" />
+                    </padding>
+                    <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="64% Used" />
+                    <Label text="640 GB of 1000 GB Used" />
+                    <Region VBox.vgrow="ALWAYS" />
+                    <Label alignment="BOTTOM_CENTER" prefHeight="18.0" prefWidth="158.0" text="Upgrade Premium to">
+                  <font>
+                     <Font size="15.0" />
+                  </font></Label>
+                    <Label alignment="BOTTOM_CENTER" prefHeight="18.0" prefWidth="158.0" text="Get more Space">
+                  <font>
+                     <Font size="15.0" />
+                  </font></Label>
+                    <Button prefWidth="150" style="-fx-background-color: #FFF; -fx-text-fill: black; -fx-background-radius: 3;" text="Upgrade Now">
+                        <VBox.margin><Insets bottom="10" /></VBox.margin>
+                    </Button>
+                </VBox>
+
+                <!-- Spacer dưới card để đẩy card lên -->
+                <Region VBox.vgrow="ALWAYS" />
             </VBox>
+
+
 
         </VBox>
     </left>
-
     <!-- ========= MAIN CONTENT ========= -->
     <center>
         <VBox spacing="25" style="-fx-background-color: #F2F2F2;">
