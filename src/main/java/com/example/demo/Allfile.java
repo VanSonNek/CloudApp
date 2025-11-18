@@ -5,15 +5,14 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class Dashboard extends Application {
-
+public class Allfile extends Application {
     @Override
     public void start(Stage stage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("dashboard.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("allfile.fxml"));
         Scene scene = new Scene(loader.load());
         scene.getStylesheets().add(getClass().getResource("sidebar.css").toExternalForm());
         stage.setScene(scene);
-        stage.setTitle("Skybox Dashboard");
+        stage.setTitle("Skybox AllFile");
         stage.show();
     }
 

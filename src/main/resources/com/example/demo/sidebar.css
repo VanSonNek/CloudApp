@@ -1,0 +1,15 @@
+.sidebar-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #333;
+    -fx-font-size: 15px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 8 12;
+}
+
+.sidebar-button-active {
+    -fx-background-color: #E8F4FF;
+    -fx-background-radius: 8;
+    -fx-border-color: #3EA9F0;
+    -fx-border-radius: 8;
+    -fx-border-width: 2;
+}
