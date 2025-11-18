@@ -34,8 +34,7 @@ public class Main extends Application {
         LoginController loginController = loader.getController();
         loginController.setMainApp(this); 
         
-        // (Thêm code styling background cũ vào đây nếu cần, ví dụ:)
-        
+        // Thiết lập background image
         loginRoot.setStyle(
                 "-fx-background-image: url('" + getClass().getResource("/com/example/demo/imgs/fullcloud2.jpg").toExternalForm() + "');" +
                 "-fx-background-size: cover;" +
@@ -73,5 +72,9 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         launch();
+    }
+
+    public void showMainView() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
