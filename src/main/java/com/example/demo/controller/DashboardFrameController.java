@@ -1,15 +1,15 @@
 package com.example.demo.controller;
 
+import java.io.IOException;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 
-import java.io.IOException;
-
 public class DashboardFrameController {
 
-    @FXML private BorderPane rootFrame;  // BorderPane chính trong DashboardFrame.fxml
+    @FXML private BorderPane rootFrame;  
 
     @FXML
     public void initialize() {
@@ -17,25 +17,23 @@ public class DashboardFrameController {
         loadContent("dashboard_content.fxml");  // màn hình mặc định
     }
 
-    /** Load file sidebar.fxml */
+    /** Load file sidebar.fxml và truyền tham chiếu controller */
     private void loadSidebar() {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/com/example/demo/sidebar.fxml")
+                    getClass().getResource("/com/example/demo/sidebar.fxml") 
             );
 
             VBox sidebar = loader.load();
-
-            // Lấy controller của sidebar
             SidebarController sidebarController = loader.getController();
 
-            // Truyền tham chiếu cha vào SidebarController
+            // LIÊN KẾT: Truyền tham chiếu cha vào SidebarController
             sidebarController.setMainController(this);
 
-            // Đặt sidebar vào bên trái
             rootFrame.setLeft(sidebar);
 
         } catch (IOException e) {
+            System.err.println("Lỗi load Sidebar: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -47,7 +45,7 @@ public class DashboardFrameController {
                     getClass().getResource("/com/example/demo/" + fxmlFile)
             );
 
-            rootFrame.setCenter(loader.load());
+            rootFrame.setCenter(loader.load()); // Khi load allfile_content.fxml, nó sẽ gọi AllfileController.initialize()
 
         } catch (IOException e) {
             e.printStackTrace();

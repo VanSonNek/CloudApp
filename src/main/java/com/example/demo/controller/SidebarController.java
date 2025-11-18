@@ -5,7 +5,7 @@ import javafx.scene.control.Button;
 
 public class SidebarController {
 
-    private DashboardFrameController mainController; // tham chiếu controller cha
+    private DashboardFrameController mainController; 
 
     @FXML private Button btnDashboard;
     @FXML private Button btnAllFile;
