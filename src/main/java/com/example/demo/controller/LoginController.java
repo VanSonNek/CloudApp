@@ -1,11 +1,10 @@
-package com.example.demo;
+package com.example.demo.controller;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.TextField;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 
-public class Controller {
-
+public class LoginController {
     @FXML
     private TextField txtUsername;
 

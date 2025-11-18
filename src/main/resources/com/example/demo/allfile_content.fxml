@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox spacing="25" xmlns="http://javafx.com/javafx/17.0.12"
+      xmlns:fx="http://javafx.com/fxml/1"
+      style="-fx-background-color: #F2F2F2;"
+      fx:controller="com.example.demo.controller.AllfileController">
+
+    <padding>
+        <Insets bottom="20" left="10" right="0" top="0"/>
+    </padding>
+
+    <!-- ================= HEADER ================= -->
+    <HBox alignment="CENTER">
+        <HBox alignment="CENTER_LEFT" maxWidth="1003.0"
+              prefHeight="70.0" prefWidth="995.0"
+              spacing="25"
+              style="-fx-background-color: #FFFFFF; -fx-background-radius: 5;">
+
+            <padding>
+                <Insets bottom="15" left="15" right="25" top="15"/>
+            </padding>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <HBox prefWidth="740">
+                <TextField prefHeight="40" prefWidth="717"
+                           promptText="Search in Skybox"
+                           style="-fx-background-radius: 10; -fx-padding: 8;"/>
+            </HBox>
+
+            <ImageView fitHeight="20" fitWidth="20">
+                <image><Image url="@imgs/bell.png"/></image>
+            </ImageView>
+
+            <ImageView fitHeight="25" fitWidth="25">
+                <image><Image url="@imgs/man.png"/></image>
+            </ImageView>
+
+        </HBox>
+    </HBox>
+
+
+    <!-- ================= BODY TITLE ================= -->
+    <HBox alignment="CENTER" prefWidth="995">
+        <HBox alignment="CENTER_LEFT" prefWidth="995" spacing="10">
+
+            <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="All File"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-padding: 0 15 0 0;">
+                <Button fx:id="btnNew"
+                        alignment="CENTER"
+                        style="-fx-background-color: #3EA9F0; -fx-text-fill: white;
+               -fx-padding: 8 16; -fx-background-radius: 6; -fx-font-weight: bold;"
+                        text="+ New">
+                </Button>
+
+
+            </HBox>
+
+        </HBox>
+    </HBox>
+
+    <BorderPane prefHeight="1" prefWidth="995" maxWidth="995"
+                style="-fx-border-color: #D0D0D0; -fx-border-width: 0 0 1 0;"/>
+
+
+    <!-- ================= FOLDER SECTION ================= -->
+    <HBox alignment="CENTER">
+        <VBox prefWidth="995" spacing="15">
+
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Folder"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <MenuButton style="-fx-background-color: transparent;" text="Last opened by me">
+                    <items>
+                        <MenuItem text="Last opened by me"/>
+                        <MenuItem text="Last modified"/>
+                        <MenuItem text="Name"/>
+                    </items>
+                </MenuButton>
+            </HBox>
+
+            <FlowPane hgap="20" vgap="20" prefWidth="995">
+
+                <!-- Folder Card Base -->
+                <VBox prefWidth="230" spacing="10"
+                      style="-fx-background-color: #FFFFFF; -fx-background-radius: 10;
+                             -fx-padding: 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06),
+                             8, 0.2, 0, 2);">
+
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <ImageView fitHeight="28" fitWidth="28">
+                            <image>
+                                <Image url="@imgs/file.png"/>
+                            </image>
+                        </ImageView>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <MenuButton text="⋯"
+                                    style="-fx-background-color: transparent; -fx-font-size: 16px; -fx-text-fill: #666;"/>
+                    </HBox>
+
+                    <Label text="Saved Pictures"
+                           style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+
+                    <HBox>
+                        <Label text="678 Files" style="-fx-text-fill: #8D8D8D;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="4GB" style="-fx-text-fill: #8D8D8D;"/>
+                    </HBox>
+                </VBox>
+
+                <!-- COPY thêm 7 folder giống mẫu nếu cần -->
+            </FlowPane>
+        </VBox>
+    </HBox>
+
+
+    <!-- ================= FILES SECTION ================= -->
+    <HBox alignment="CENTER">
+        <VBox prefWidth="995" spacing="15">
+
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Files"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <MenuButton style="-fx-background-color: transparent;" text="Last opened by me">
+                    <items>
+                        <MenuItem text="Last opened by me"/>
+                        <MenuItem text="Last modified"/>
+                        <MenuItem text="Name"/>
+                    </items>
+                </MenuButton>
+            </HBox>
+
+            <FlowPane hgap="20" vgap="20" prefWidth="995">
+
+                <!-- File Card Example -->
+                <VBox prefWidth="230" spacing="10"
+                      style="-fx-background-color: #FFFFFF; -fx-background-radius: 10;
+                             -fx-padding: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06),
+                             8, 0.2, 0, 2);">
+
+                    <StackPane prefHeight="130" prefWidth="210"
+                               style="-fx-background-color: #F1E5D8; -fx-background-radius: 8;">
+                        <Label style="-fx-font-size: 24px; -fx-text-fill: rgba(0,0,0,0.55);" text="▶"/>
+                    </StackPane>
+
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <CheckBox/>
+                        <Label style="-fx-font-weight: bold;" text="Dribbble.mp4"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <MenuButton style="-fx-background-color: transparent;" text="⋯"/>
+                    </HBox>
+                </VBox>
+
+                <!-- COPY thêm các file card khác nếu cần -->
+
+            </FlowPane>
+        </VBox>
+    </HBox>
+
+</VBox>

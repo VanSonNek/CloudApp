@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane fx:id="rootFrame"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.demo.controller.DashboardFrameController"
+            prefHeight="750" prefWidth="1200">
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <left>
+        <!-- Nhúng sidebar từ file riêng -->
+        <fx:include source="sidebar.fxml"/>
+    </left>
+
+    <!-- ===================== MAIN CONTENT ===================== -->
+    <center>
+        <!-- Đây là nơi load dashboard_content.fxml hoặc allfile_content.fxml -->
+        <StackPane fx:id="mainContent"
+                   style="-fx-background-color: #F2F2F2;"
+                   prefWidth="1000" prefHeight="750"/>
+    </center>
+
+</BorderPane>

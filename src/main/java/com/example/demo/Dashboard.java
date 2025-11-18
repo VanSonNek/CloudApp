@@ -9,9 +9,8 @@ public class Dashboard extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("dashboard.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("dashboard_content.fxml"));
         Scene scene = new Scene(loader.load());
-        scene.getStylesheets().add(getClass().getResource("sidebar.css").toExternalForm());
         stage.setScene(scene);
         stage.setTitle("Skybox Dashboard");
         stage.show();
