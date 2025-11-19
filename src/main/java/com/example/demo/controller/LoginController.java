@@ -92,8 +92,10 @@ public class LoginController {
                 }
             });
         }
-        
-        public void createAccount() {
-            System.out.println("Đi tới trang đăng ký");
+
+    public void createAccount() {
+        if (mainApp != null) {
+            mainApp.showRegisterScene();
         }
+    }
 }

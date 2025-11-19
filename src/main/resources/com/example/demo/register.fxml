@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.effect.ColorAdjust?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.example.demo.controller.RegisterController"
+      alignment="CENTER"
+      spacing="20"
+      prefWidth="1200" prefHeight="750">
+
+    <ImageView fitWidth="90" fitHeight="90">
+        <image>
+            <Image url="@imgs/cloud.png" />
+        </image>
+        <effect>
+            <ColorAdjust contrast="0.5" brightness="0.4" />
+        </effect>
+    </ImageView>
+
+    <Label text="Create Your Skybox Account"
+           style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+
+    <!-- Form -->
+    <VBox spacing="15" alignment="CENTER"
+          maxWidth="420" style="-fx-background-color: rgba(255,255,255,0.85);
+                                -fx-background-radius: 15;
+                                -fx-padding: 25;">
+
+        <!-- Fullname -->
+        <VBox spacing="5" maxWidth="350">
+            <Label text="Full Name" style="-fx-font-size: 14px; -fx-text-fill: black;" />
+            <TextField fx:id="txtFullName"
+                       promptText="Enter your full name"
+                       prefWidth="350" />
+        </VBox>
+
+        <!-- Email -->
+        <VBox spacing="5" maxWidth="350">
+            <Label text="Email" style="-fx-font-size: 14px; -fx-text-fill: black;" />
+            <TextField fx:id="txtEmail"
+                       promptText="Enter your email"
+                       prefWidth="350" />
+        </VBox>
+
+        <!-- Password -->
+        <VBox spacing="5" maxWidth="350">
+            <Label text="Password" style="-fx-font-size: 14px; -fx-text-fill: black;" />
+            <PasswordField fx:id="txtPassword"
+                           promptText="Enter your password"
+                           prefWidth="350" />
+        </VBox>
+
+        <!-- Confirm Password -->
+        <VBox spacing="5" maxWidth="350">
+            <Label text="Confirm Password" style="-fx-font-size: 14px; -fx-text-fill: black;" />
+            <PasswordField fx:id="txtConfirmPassword"
+                           promptText="Re-enter your password"
+                           prefWidth="350" />
+        </VBox>
+
+        <!-- Register button -->
+        <Button text="Create Account"
+                onAction="#register"
+                maxWidth="350"
+                style="-fx-background-color: #1976D2; -fx-text-fill: white;
+                       -fx-font-size: 16px; -fx-padding: 10; -fx-background-radius: 10;" />
+
+        <!-- Link quay về login -->
+        <HBox alignment="CENTER" spacing="5">
+            <Label text="Already have an account?" style="-fx-text-fill: black;" />
+            <Hyperlink text="Login" onAction="#gotoLogin" />
+        </HBox>
+
+    </VBox>
+
+</VBox>
