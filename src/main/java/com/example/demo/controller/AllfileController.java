@@ -1,25 +1,32 @@
 package com.example.demo.controller;
 
+import java.io.File;
+import java.util.List;
+import java.util.concurrent.Executors;
+
 import com.example.demo.ClientApiHandler;
 import com.example.demo.ListItem;
+
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.control.*;
-import javafx.scene.image.Image;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Popup;
-
-import java.io.File;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.Executors;
 
 public class AllfileController {
 
@@ -27,7 +34,8 @@ public class AllfileController {
     @FXML private FlowPane folderFlowPane;
     @FXML private FlowPane fileFlowPane;
 
-    private final Long currentDirectoryId = null; // null = root
+    // ✅ SỬA 1: Bỏ 'final' để có thể cập nhật ID thư mục
+    private Long currentDirectoryId = null; // null = root
 
     @FXML
     public void initialize() {
@@ -50,6 +58,7 @@ public class AllfileController {
 
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
+                // Tải dữ liệu dựa trên currentDirectoryId hiện tại
                 List<ListItem> folders = fetchDirectories(currentDirectoryId);
                 List<ListItem> files = fetchFiles(currentDirectoryId);
 
@@ -57,10 +66,21 @@ public class AllfileController {
                     folderFlowPane.getChildren().clear();
                     fileFlowPane.getChildren().clear();
 
+                    // Thêm nút quay lại nếu không phải là thư mục gốc
+                    if (currentDirectoryId != null) {
+                        folderFlowPane.getChildren().add(createBackCard());
+                    }
+
                     renderFolders(folders);
                     renderFiles(files);
 
-                    if (folders.isEmpty()) folderFlowPane.getChildren().add(createEmptyCard("Không có thư mục"));
+                    if (folders.isEmpty() && currentDirectoryId == null) {
+                        folderFlowPane.getChildren().add(createEmptyCard("Không có thư mục"));
+                    } else if (folders.isEmpty() && currentDirectoryId != null && folderFlowPane.getChildren().size() == 1) {
+                         // Nếu chỉ có nút Back và không có folder nào
+                         folderFlowPane.getChildren().add(createEmptyCard("Thư mục trống"));
+                    }
+
                     if (files.isEmpty()) fileFlowPane.getChildren().add(createEmptyCard("Không có file nào"));
                 });
 
@@ -75,6 +95,17 @@ public class AllfileController {
             }
         });
     }
+    
+    // ✅ SỬA 2: Thêm phương thức để cập nhật ID thư mục và tải lại
+    private void openDirectory(Long directoryId) {
+        if (directoryId != null) {
+            System.out.println("--- Đang chuyển thư mục đến ID: " + directoryId + " ---");
+        } else {
+            System.out.println("--- Đang trở về thư mục Gốc ---");
+        }
+        this.currentDirectoryId = directoryId;
+        loadDataFromServer();
+    }
 
     // ================= RENDER THƯ MỤC =================
     private void renderFolders(List<ListItem> folders) {
@@ -82,6 +113,38 @@ public class AllfileController {
             folderFlowPane.getChildren().add(createFolderCard(item));
         }
     }
+    
+    // Thẻ quay lại (Tạm thời quay về gốc vì thiếu thông tin parentId từ Server)
+    private VBox createBackCard() {
+        VBox card = new VBox(12);
+        card.setPrefWidth(230);
+        card.setPadding(new Insets(16));
+        card.setStyle("-fx-background-color: #F8F8F8; -fx-background-radius: 12; " +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0.2, 0, 3);");
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setCursor(Cursor.HAND);
+
+        // Icon (có thể thay bằng icon local)
+        ImageView icon = new ImageView("https://img.icons8.com/ios-filled/50/reply-arrow.png");
+        icon.setFitWidth(32);
+        icon.setFitHeight(32);
+
+        Label nameLabel = new Label("..");
+        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+
+        Label typeLabel = new Label("Quay lại");
+        typeLabel.setStyle("-fx-text-fill: #888; -fx-font-size: 12px;");
+
+        card.getChildren().addAll(icon, nameLabel, typeLabel);
+        
+        card.setOnMouseClicked(e -> {
+            // Quay về thư mục gốc (hoặc Parent Directory ID nếu có)
+            openDirectory(null); 
+        });
+
+        return card;
+    }
+
 
     private VBox createFolderCard(ListItem item) {
         VBox card = new VBox(12);
@@ -91,7 +154,7 @@ public class AllfileController {
                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0.2, 0, 3);");
         card.setCursor(Cursor.HAND);
 
-        // Icon thư mục (dùng online - không lỗi)
+        // Icon thư mục (dùng online)
         ImageView icon = new ImageView("https://img.icons8.com/fluency/48/folder-invoices.png");
         icon.setFitWidth(32);
         icon.setFitHeight(32);
@@ -112,17 +175,18 @@ public class AllfileController {
 
         card.getChildren().addAll(top, nameLabel, typeLabel);
 
-        // Double click để vào thư mục (tương lai)
+        // ✅ SỬA 3: Double click để vào thư mục
         card.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
                 System.out.println("Mở thư mục: " + item.getName() + " (ID: " + item.getId() + ")");
+                openDirectory(item.getId()); // Gọi hàm chuyển thư mục
             }
         });
 
         return card;
     }
 
-    // ================= RENDER FILE =================
+    // ================= RENDER FILE (Không đổi) =================
     private void renderFiles(List<ListItem> files) {
         for (ListItem item : files) {
             fileFlowPane.getChildren().add(createFileCard(item));
@@ -175,7 +239,7 @@ public class AllfileController {
         return card;
     }
 
-    // ================= CARD HỖ TRỢ =================
+    // ================= CÁC PHƯƠNG THỨC KHÁC (Không đổi) =================
     private VBox createLoadingCard() {
         return createEmptyCard("Đang tải...");
     }
@@ -198,7 +262,6 @@ public class AllfileController {
         });
     }
 
-    // ================= MENU + UPLOAD =================
     private void setupNewMenu() {
         Popup popup = new Popup();
         popup.setAutoHide(true);
