@@ -24,8 +24,8 @@ public class Main extends Application {
         this.primaryStage = stage;
 
         // Mặc định mở trang login
-//        showLoginScene();
-        showDashboardScene();
+        showLoginScene();
+        //showDashboardScene();
     }
 
     // ==================== LOGIN ====================

@@ -8,6 +8,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.util.Base64;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Executors;
 
 import com.google.gson.Gson;
@@ -48,6 +51,78 @@ public class ClientApiHandler {
     public static void setCredentials(String username, String password) {
         currentUsername = username;
         currentPassword = password;
+    }
+
+    // ================= LẤY DANH SÁCH THƯ MỤC =================
+    public static List<ListItem.DirectoryDto> getDirectories(Long parentId) {
+        String authHeader = getBasicAuthHeader();
+        if (authHeader == null) {
+            System.err.println("Chưa đăng nhập!");
+            return Collections.emptyList();
+        }
+
+        try {
+            String url = SERVER_URL + "/api/directories";
+            if (parentId != null) {
+                url += "?parentId=" + parentId;
+            }
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("Authorization", authHeader)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                ListItem.DirectoryDto[] array = gson.fromJson(response.body(), ListItem.DirectoryDto[].class);
+                return Arrays.asList(array);
+            } else {
+                System.err.println("Lỗi lấy thư mục: " + response.statusCode() + " - " + response.body());
+                return Collections.emptyList();
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi kết nối khi lấy danh sách thư mục");
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    // ================= LẤY DANH SÁCH FILE =================
+    public static List<ListItem.FileDto> getFiles(Long directoryId) {
+        String authHeader = getBasicAuthHeader();
+        if (authHeader == null) {
+            System.err.println("Chưa đăng nhập!");
+            return Collections.emptyList();
+        }
+
+        try {
+            String url = SERVER_URL + "/api/files";
+            if (directoryId != null) {
+                url += "?directoryId=" + directoryId;
+            }
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("Authorization", authHeader)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                ListItem.FileDto[] array = gson.fromJson(response.body(), ListItem.FileDto[].class);
+                return Arrays.asList(array);
+            } else {
+                System.err.println("Lỗi lấy file: " + response.statusCode() + " - " + response.body());
+                return Collections.emptyList();
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi kết nối khi lấy danh sách file");
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
     }
     
     public static boolean isAuthenticated() {
