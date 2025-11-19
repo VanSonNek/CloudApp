@@ -19,18 +19,74 @@ import javafx.stage.FileChooser;
 import javafx.stage.Popup;
 import javafx.stage.Window; // <<< THÊM: Dùng để chọn thư mục
 
+import javax.swing.text.html.ImageView;
+
 public class AllfileController {
 
     @FXML private Button btnNew;
+    @FXML private javafx.scene.image.ImageView avatarBtn;
+
 
     // Tạm thời, ID thư mục hiện tại là ROOT (null)
     private final Long currentDirectoryId = null; 
 
     @FXML
     public void initialize() {
+
         System.out.println("Allfile content loaded!");
         setupNewMenu();
+        setupAvatarMenu();
+
     }
+    // ==================== AVATAR MENU ====================
+    private void setupAvatarMenu() {
+
+        Popup popup = new Popup();
+        popup.setAutoHide(true);
+
+        VBox box = new VBox();
+        box.setSpacing(5);
+        box.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
+        box.setPadding(new Insets(10));
+        box.setEffect(new javafx.scene.effect.DropShadow(10, Color.rgb(0, 0, 0, 0.18)));
+
+        // Sử dụng lại createMenuRow() giống menu "+ New"
+        VBox profile = createMenuRow("Thông tin cá nhân");
+        VBox account = createMenuRow("Tài khoản");
+        VBox logout = createMenuRow("Đăng xuất");
+
+        box.getChildren().addAll(profile, account, logout);
+        popup.getContent().add(box);
+
+        // Hiện popup khi nhấn vào avatar
+        avatarBtn.setOnMouseClicked(e -> {
+            popup.show(
+                    avatarBtn,
+                    avatarBtn.localToScreen(avatarBtn.getBoundsInLocal()).getMaxX() - 120,
+                    avatarBtn.localToScreen(avatarBtn.getBoundsInLocal()).getMaxY() + 5
+            );
+        });
+
+        // Sự kiện bấm từng item
+        profile.setOnMouseClicked(e -> {
+            popup.hide();
+            System.out.println("Đi đến trang thông tin cá nhân");
+        });
+
+        account.setOnMouseClicked(e -> {
+            popup.hide();
+            System.out.println("Trang tài khoản");
+        });
+
+        logout.setOnMouseClicked(e -> {
+            popup.hide();
+            System.out.println("Đăng xuất…");
+
+            // Nếu muốn trở lại login → đưa Main vào AllfileController
+            // mainApp.showLoginScene();
+        });
+    }
+
 
     private void setupNewMenu() {
 

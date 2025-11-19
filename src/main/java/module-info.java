@@ -5,6 +5,7 @@ module com.example.demo {
     requires javafx.base;
     requires java.net.http;
     requires com.google.gson;
+    requires java.desktop;
 
 
     opens com.example.demo to javafx.fxml, com.google.gson;

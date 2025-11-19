@@ -1,15 +1,45 @@
-/*.sidebar-button {*/
-/*    -fx-background-color: transparent;*/
-/*    -fx-text-fill: #333;*/
-/*    -fx-font-size: 15px;*/
-/*    -fx-alignment: CENTER_LEFT;*/
-/*    -fx-padding: 8 12;*/
-/*}*/
+/* ===================== RESET ===================== */
+.sidebar-btn {
+    -fx-background-insets: 0;
+    -fx-background-radius: 8;
+    -fx-border-width: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
 
-/*.sidebar-button-active {*/
-/*    -fx-background-color: #E8F4FF;*/
-/*    -fx-background-radius: 8;*/
-/*    -fx-border-color: #3EA9F0;*/
-/*    -fx-border-radius: 8;*/
-/*    -fx-border-width: 2;*/
-/*}*/
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #444;
+    -fx-padding: 0 0 0 15;
+    -fx-pref-width: 200;
+    -fx-pref-height: 44;
+    -fx-alignment: CENTER_LEFT;
+    -fx-font-size: 15px;
+
+    -fx-effect: none;
+}
+
+/* ===================== HOVER ===================== */
+.sidebar-btn:hover {
+    -fx-background-color: #E8F3FF;
+    -fx-cursor: hand;
+}
+
+/* ===================== ACTIVE ===================== */
+.sidebar-btn-active {
+    -fx-background-color: #D8EBFF;
+    -fx-text-fill: #1976D2;
+    -fx-font-weight: bold;
+
+    -fx-border-width: 0 0 0 4;
+    -fx-border-color: #1976D2;
+    -fx-background-radius: 8;
+}
+
+/* Icon mờ mặc định */
+.sidebar-btn ImageView {
+    -fx-opacity: 0.65;
+}
+
+/* Icon sáng khi Active */
+.sidebar-btn-active ImageView {
+    -fx-opacity: 1;
+}
