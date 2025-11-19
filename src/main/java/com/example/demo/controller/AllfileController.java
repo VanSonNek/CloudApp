@@ -24,6 +24,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Popup;
@@ -31,16 +32,23 @@ import javafx.stage.Popup;
 public class AllfileController {
 
     @FXML private Button btnNew;
+
     @FXML private FlowPane folderFlowPane;
     @FXML private FlowPane fileFlowPane;
+
+    @FXML private javafx.scene.image.ImageView avatarBtn;
+
+
 
     // ✅ SỬA 1: Bỏ 'final' để có thể cập nhật ID thư mục
     private Long currentDirectoryId = null; // null = root
 
     @FXML
     public void initialize() {
+
         System.out.println("Allfile content loaded!");
         setupNewMenu();
+
         loadDataFromServer();
     }
 
@@ -260,7 +268,59 @@ public class AllfileController {
             folderFlowPane.getChildren().add(createEmptyCard(msg));
             fileFlowPane.getChildren().add(createEmptyCard(""));
         });
+
+        setupAvatarMenu();
+
     }
+    // ==================== AVATAR MENU ====================
+    private void setupAvatarMenu() {
+
+        Popup popup = new Popup();
+        popup.setAutoHide(true);
+
+        VBox box = new VBox();
+        box.setSpacing(5);
+        box.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
+        box.setPadding(new Insets(10));
+        box.setEffect(new javafx.scene.effect.DropShadow(10, Color.rgb(0, 0, 0, 0.18)));
+
+        // Sử dụng lại createMenuRow() giống menu "+ New"
+        VBox profile = createMenuRow("Thông tin cá nhân");
+        VBox account = createMenuRow("Tài khoản");
+        VBox logout = createMenuRow("Đăng xuất");
+
+        box.getChildren().addAll(profile, account, logout);
+        popup.getContent().add(box);
+
+        // Hiện popup khi nhấn vào avatar
+        avatarBtn.setOnMouseClicked(e -> {
+            popup.show(
+                    avatarBtn,
+                    avatarBtn.localToScreen(avatarBtn.getBoundsInLocal()).getMaxX() - 120,
+                    avatarBtn.localToScreen(avatarBtn.getBoundsInLocal()).getMaxY() + 5
+            );
+        });
+
+        // Sự kiện bấm từng item
+        profile.setOnMouseClicked(e -> {
+            popup.hide();
+            System.out.println("Đi đến trang thông tin cá nhân");
+        });
+
+        account.setOnMouseClicked(e -> {
+            popup.hide();
+            System.out.println("Trang tài khoản");
+        });
+
+        logout.setOnMouseClicked(e -> {
+            popup.hide();
+            System.out.println("Đăng xuất…");
+
+            // Nếu muốn trở lại login → đưa Main vào AllfileController
+            // mainApp.showLoginScene();
+        });
+    }
+
 
     private void setupNewMenu() {
         Popup popup = new Popup();

@@ -38,9 +38,10 @@
                 <image><Image url="@imgs/bell.png"/></image>
             </ImageView>
 
-            <ImageView fitHeight="25" fitWidth="25">
+            <ImageView fx:id="avatarBtn" fitHeight="25" fitWidth="25">
                 <image><Image url="@imgs/man.png"/></image>
             </ImageView>
+
 
         </HBox>
     </HBox>

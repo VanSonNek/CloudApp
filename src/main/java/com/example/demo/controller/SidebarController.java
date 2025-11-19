@@ -23,25 +23,59 @@ public class SidebarController {
     @FXML
     public void initialize() {
 
-        btnDashboard.setOnAction(e ->
-                mainController.loadContent("dashboard_content.fxml"));
+        btnDashboard.setOnAction(e -> {
+            highlight(btnDashboard);
+            mainController.loadContent("dashboard_content.fxml");
+        });
 
-        btnAllFile.setOnAction(e ->
-                mainController.loadContent("allfile_content.fxml"));
+        btnAllFile.setOnAction(e -> {
+            highlight(btnAllFile);
+            mainController.loadContent("allfile_content.fxml");
+        });
 
-        btnShared.setOnAction(e ->
-                mainController.loadContent("shared_content.fxml"));
+        btnShared.setOnAction(e -> {
+            highlight(btnShared);
+            mainController.loadContent("shared_content.fxml");
+        });
 
-        btnInbox.setOnAction(e ->
-                mainController.loadContent("inbox_content.fxml"));
+        btnInbox.setOnAction(e -> {
+            highlight(btnInbox);
+            mainController.loadContent("inbox_content.fxml");
+        });
 
-        btnRecent.setOnAction(e ->
-                mainController.loadContent("recent_content.fxml"));
+        btnRecent.setOnAction(e -> {
+            highlight(btnRecent);
+            mainController.loadContent("recent_content.fxml");
+        });
 
-        btnStarred.setOnAction(e ->
-                mainController.loadContent("starred_content.fxml"));
+        btnStarred.setOnAction(e -> {
+            highlight(btnStarred);
+            mainController.loadContent("starred_content.fxml");
+        });
 
-        btnTrash.setOnAction(e ->
-                mainController.loadContent("trash_content.fxml"));
+        btnTrash.setOnAction(e -> {
+            highlight(btnTrash);
+            mainController.loadContent("trash_content.fxml");
+        });
+
+        // Mặc định Dashboard active khi mở app
+        highlight(btnDashboard);
     }
+
+    private void highlight(Button activeBtn) {
+        // Xóa active ở tất cả nút
+        btnDashboard.getStyleClass().remove("sidebar-btn-active");
+        btnAllFile.getStyleClass().remove("sidebar-btn-active");
+        btnShared.getStyleClass().remove("sidebar-btn-active");
+        btnInbox.getStyleClass().remove("sidebar-btn-active");
+        btnRecent.getStyleClass().remove("sidebar-btn-active");
+        btnStarred.getStyleClass().remove("sidebar-btn-active");
+        btnTrash.getStyleClass().remove("sidebar-btn-active");
+
+        // Thêm active vào nút được click
+        if (!activeBtn.getStyleClass().contains("sidebar-btn-active")) {
+            activeBtn.getStyleClass().add("sidebar-btn-active");
+        }
+    }
+
 }
