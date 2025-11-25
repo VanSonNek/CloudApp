@@ -72,16 +72,6 @@
             </graphic>
         </Button>
 
-        <Button fx:id="btnRecent" text="Recent"
-                graphicTextGap="12" prefHeight="44"
-                styleClass="sidebar-btn">
-            <graphic>
-                <ImageView fitHeight="20" fitWidth="20">
-                    <image><Image url="@imgs/clock.png"/></image>
-                </ImageView>
-            </graphic>
-        </Button>
-
         <Button fx:id="btnStarred" text="Starred"
                 graphicTextGap="12" prefHeight="44"
                 styleClass="sidebar-btn">
@@ -98,6 +88,16 @@
             <graphic>
                 <ImageView fitHeight="20" fitWidth="20">
                     <image><Image url="@imgs/trash.png"/></image>
+                </ImageView>
+            </graphic>
+        </Button>
+
+        <Button fx:id="btnAccount" text="Account"
+                graphicTextGap="12" prefHeight="44"
+                styleClass="sidebar-btn">
+            <graphic>
+                <ImageView fitHeight="20" fitWidth="20">
+                    <image><Image url="@imgs/account.png"/></image>
                 </ImageView>
             </graphic>
         </Button>

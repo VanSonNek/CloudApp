@@ -1,0 +1,45 @@
+.flat-list {
+    -fx-background-color: transparent;
+    -fx-padding: 0 0 10 0;
+}
+.flat-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-border-width: 0;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.table-header {
+    -fx-padding: 8 10 8 10;
+}
+.th {
+    -fx-text-fill: #8B8B8B;
+    -fx-font-weight: bold;
+}
+
+.section-header {
+    -fx-background-color: #F5F5F5;
+    -fx-text-fill: #6B6B6B;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 0 6 10;
+}
+
+.row {
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 8 10 8 10;
+    -fx-border-color: #E6E6E6;
+    -fx-border-width: 0 0 1 0;
+    -fx-alignment: CENTER_LEFT;
+}
+.row .file-name {
+    -fx-font-weight: bold;
+}
+
+.badge {
+    -fx-background-color: #EAF3FF;
+    -fx-text-fill: #1D73E8;
+    -fx-padding: 3 10 3 10;
+    -fx-background-radius: 10;
+    -fx-font-size: 11px;
+}

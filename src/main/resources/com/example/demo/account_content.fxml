@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.12"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.example.demo.controller.AccountController"
+      spacing="25"
+      style="-fx-background-color:#F2F2F2;"
+      prefWidth="1200">
+
+    <!-- ToggleGroup cho các RadioButton -->
+    <fx:define>
+        <ToggleGroup fx:id="appearanceGroup"/>
+        <ToggleGroup fx:id="dateFormatGroup"/>
+    </fx:define>
+
+    <padding>
+        <Insets top="0" bottom="20" left="0" right="0"/>
+    </padding>
+
+
+
+    <!-- ========== NỘI DUNG SETTINGS ========== -->
+    <HBox alignment="TOP_CENTER">
+        <VBox prefWidth="1000" maxWidth="1020"
+              spacing="20"
+              style="-fx-background-color:#FFFFFF; -fx-background-radius:10;">
+            <padding>
+                <Insets top="25" bottom="30" left="30" right="30"/>
+            </padding>
+
+            <!-- Tiêu đề Settings -->
+            <Label text="Settings"
+                   style="-fx-font-size:22px; -fx-font-weight:bold;"/>
+
+            <!-- Tabs: Account / Notification / Security / Contacts and Chats -->
+            <VBox spacing="8">
+                <HBox spacing="30">
+                    <Label text="Account"
+                           style="-fx-font-size:14px; -fx-font-weight:bold;
+                                  -fx-border-color:transparent transparent #F6C51A transparent;
+                                  -fx-border-width:0 0 2 0;
+                                  -fx-padding:0 0 8 0;"/>
+
+                    <Label text="Notification"
+                           style="-fx-font-size:14px; -fx-text-fill:#777777;"/>
+
+                    <Label text="Security"
+                           style="-fx-font-size:14px; -fx-text-fill:#777777;"/>
+
+                    <Label text="Contacts and Chats"
+                           style="-fx-font-size:14px; -fx-text-fill:#777777;"/>
+                </HBox>
+
+                <Separator/>
+            </VBox>
+
+            <!-- ========== PROFILE HEADER (avatar + name + button) ========== -->
+            <HBox spacing="20" alignment="CENTER_LEFT">
+                <ImageView fitWidth="80" fitHeight="80">
+                    <image>
+                        <Image url="@imgs/man.png"/>
+                    </image>
+                </ImageView>
+
+                <VBox spacing="5">
+                    <Label fx:id="fullNameLabel"
+                           text="SƠn nè "
+                           style="-fx-font-size:18px; -fx-font-weight:bold;"/>
+                    <Label fx:id="emailLabel"
+                           text="sondaica@gmail.com"
+                           style="-fx-text-fill:#777777; -fx-font-size:13px;"/>
+                </VBox>
+
+                <Pane HBox.hgrow="ALWAYS"/>
+
+                <Button text="Update Profile Picture"
+                        style="-fx-background-color:#FFC107;
+                               -fx-background-radius:5;
+                               -fx-text-fill:#FFFFFF;
+                               -fx-font-weight:bold;
+                               -fx-padding:8 18 8 18;"/>
+            </HBox>
+
+            <Separator/>
+
+            <!-- ========== PROFILE FORM ========== -->
+            <VBox spacing="15">
+                <Label text="Profile"
+                       style="-fx-font-size:14px; -fx-font-weight:bold;"/>
+
+                <Label text="This information will be displayed publicly so be careful what you share."
+                       wrapText="true"
+                       style="-fx-text-fill:#888888; -fx-font-size:12px;"/>
+
+                <GridPane hgap="20" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50"/>
+                        <ColumnConstraints percentWidth="50"/>
+                    </columnConstraints>
+
+                    <!-- Row 0: labels First / Last -->
+                    <Label text="First name"
+                           GridPane.rowIndex="0" GridPane.columnIndex="0"
+                           style="-fx-font-size:12px; -fx-text-fill:#555555;"/>
+                    <Label text="Last name"
+                           GridPane.rowIndex="0" GridPane.columnIndex="1"
+                           style="-fx-font-size:12px; -fx-text-fill:#555555;"/>
+
+                    <!-- Row 1: fields First / Last -->
+                    <TextField text="Sơn Nè "
+                               GridPane.rowIndex="1" GridPane.columnIndex="0"
+                               prefHeight="35"
+                               style="-fx-background-radius:5;"/>
+                    <TextField text="Ahihi"
+                               GridPane.rowIndex="1" GridPane.columnIndex="1"
+                               prefHeight="35"
+                               style="-fx-background-radius:5;"/>
+
+                    <!-- Row 2: labels DOB / Country -->
+                    <Label text="Date of Birth"
+                           GridPane.rowIndex="2" GridPane.columnIndex="0"
+                           style="-fx-font-size:12px; -fx-text-fill:#555555;"/>
+                    <Label text="Country"
+                           GridPane.rowIndex="2" GridPane.columnIndex="1"
+                           style="-fx-font-size:12px; -fx-text-fill:#555555;"/>
+
+                    <!-- Row 3: fields DOB / Country -->
+                    <DatePicker GridPane.rowIndex="3" GridPane.columnIndex="0"
+                                prefHeight="35"
+                                style="-fx-background-radius:5;"/>
+                    <ComboBox GridPane.rowIndex="3" GridPane.columnIndex="1"
+                              prefHeight="35"
+                              promptText="VietNam"
+                              style="-fx-background-radius:5;"/>
+                </GridPane>
+            </VBox>
+
+            <Separator/>
+
+            <!-- ========== PREFERENCES ========== -->
+            <VBox spacing="15">
+                <Label text="Preferences"
+                       style="-fx-font-size:14px; -fx-font-weight:bold;"/>
+
+                <!-- Appearance -->
+                <HBox spacing="25" alignment="CENTER_LEFT">
+                    <Label text="Appearance:"
+                           style="-fx-font-weight:bold; -fx-font-size:13px;"/>
+
+                    <RadioButton text="System default"
+                                 toggleGroup="$appearanceGroup"/>
+
+                    <RadioButton text="Light"
+                                 selected="true"
+                                 toggleGroup="$appearanceGroup"/>
+
+                    <RadioButton text="Dark"
+                                 toggleGroup="$appearanceGroup"/>
+                </HBox>
+
+                <!-- Date Format -->
+                <HBox spacing="25" alignment="CENTER_LEFT">
+                    <Label text="Date Format:"
+                           style="-fx-font-weight:bold; -fx-font-size:13px;"/>
+
+                    <RadioButton text="Format for my language and country."
+                                 wrapText="true"
+                                 maxWidth="200"
+                                 toggleGroup="$dateFormatGroup"/>
+
+                    <RadioButton text="Use the ISO date and time format"
+                                 wrapText="true"
+                                 maxWidth="220"
+                                 selected="true"
+                                 toggleGroup="$dateFormatGroup"/>
+                </HBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- ========== CLOSE ACCOUNT ========== -->
+            <VBox spacing="10">
+                <Label text="Close Account"
+                       style="-fx-font-size:14px; -fx-font-weight:bold;"/>
+
+                <HBox spacing="20" alignment="CENTER_LEFT">
+                    <VBox spacing="5">
+                        <Label text="Warning:"
+                               style="-fx-text-fill:#FF4D4F; -fx-font-weight:bold;"/>
+                        <Label text="You will not be able to access your account data, your SKYBOX contacts or conversations after you confirm this action."
+                               wrapText="true"
+                               prefWidth="420"
+                               style="-fx-font-size:12px; -fx-text-fill:#555555;"/>
+                    </VBox>
+
+                    <Pane HBox.hgrow="ALWAYS"/>
+
+                    <Button text="Close Account"
+                            style="-fx-background-color:#FF4D4F;
+                                   -fx-text-fill:#FFFFFF;
+                                   -fx-font-weight:bold;
+                                   -fx-background-radius:5;
+                                   -fx-padding:10 24 10 24;"/>
+                </HBox>
+            </VBox>
+
+        </VBox>
+    </HBox>
+
+</VBox>

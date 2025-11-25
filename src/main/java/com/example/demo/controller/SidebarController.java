@@ -11,7 +11,7 @@ public class SidebarController {
     @FXML private Button btnAllFile;
     @FXML private Button btnShared;
     @FXML private Button btnInbox;
-    @FXML private Button btnRecent;
+    @FXML private Button btnAccount;
     @FXML private Button btnStarred;
     @FXML private Button btnTrash;
 
@@ -43,9 +43,9 @@ public class SidebarController {
             mainController.loadContent("inbox_content.fxml");
         });
 
-        btnRecent.setOnAction(e -> {
-            highlight(btnRecent);
-            mainController.loadContent("recent_content.fxml");
+        btnAccount.setOnAction(e -> {
+            highlight(btnAccount);
+            mainController.loadContent("account_content.fxml");
         });
 
         btnStarred.setOnAction(e -> {
@@ -68,7 +68,7 @@ public class SidebarController {
         btnAllFile.getStyleClass().remove("sidebar-btn-active");
         btnShared.getStyleClass().remove("sidebar-btn-active");
         btnInbox.getStyleClass().remove("sidebar-btn-active");
-        btnRecent.getStyleClass().remove("sidebar-btn-active");
+        btnAccount.getStyleClass().remove("sidebar-btn-active");
         btnStarred.getStyleClass().remove("sidebar-btn-active");
         btnTrash.getStyleClass().remove("sidebar-btn-active");
 
