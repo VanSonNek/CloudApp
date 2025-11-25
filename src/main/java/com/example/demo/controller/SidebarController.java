@@ -35,7 +35,7 @@ public class SidebarController {
 
         btnShared.setOnAction(e -> {
             highlight(btnShared);
-            mainController.loadContent("shared_content.fxml");
+            mainController.loadContent("share_content.fxml");
         });
 
         btnInbox.setOnAction(e -> {

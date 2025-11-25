@@ -7,11 +7,9 @@ module com.example.demo {
     requires com.google.gson;
     requires java.desktop;
 
-
     opens com.example.demo to javafx.fxml, com.google.gson;
     opens com.example.demo.controller to javafx.fxml, com.google.gson;
 
     exports com.example.demo;
     exports com.example.demo.controller;
-
 }

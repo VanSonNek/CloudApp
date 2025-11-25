@@ -6,6 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
+<?import javafx.scene.shape.Circle?>
 <VBox xmlns="http://javafx.com/javafx/17.0.12"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.example.demo.controller.DashboardController"
@@ -83,31 +84,68 @@
 
     </HBox>
 
-    <!-- USED STORAGE -->
+    <!-- USED STORAGE CARD -->
     <HBox alignment="CENTER">
-        <VBox prefWidth="721" maxWidth="766"
-              prefHeight="113"
-              spacing="10"
-              style="-fx-background-color:#FFFFFF; -fx-background-radius:10;">
-            <padding>
-                <Insets top="15" bottom="15" left="15" right="15"/>
-            </padding>
+        <VBox spacing="15"
+              prefWidth="721" maxWidth="765"
+              style="-fx-background-color: white; -fx-background-radius: 20;">
 
-            <Label text="Used Storage" style="-fx-font-size:18px; -fx-font-weight:bold;"/>
+            <padding><Insets top="20" bottom="20" left="28" right="28"/></padding>
 
-            <HBox alignment="CENTER" spacing="30">
-                <Label text="77% Cloud Drive"/>
-                <Label text="9% Trash"/>
-                <Label text="14% Available"/>
-            </HBox>
+            <children>
 
-            <ProgressBar fx:id="usedStorageBar"
-                         prefWidth="692"
-                         prefHeight="16"
-                         progress="0.7"
-                         style="-fx-accent:#3ea9f0;"/>
+                <Label text="Used Storage"
+                       style="-fx-font-size: 18; -fx-font-weight: bold;"/>
+
+                <HBox spacing="0" prefWidth="650">
+
+                    <!-- CLOUD - LEFT -->
+                    <VBox spacing="5" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                        <HBox spacing="4">
+                            <Label text="6%" style="-fx-font-size: 17; -fx-font-weight: bold;"/>
+                            <Label text="(4.26GB)" style="-fx-text-fill: #888;"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER_LEFT">
+                            <Circle radius="4" fill="#3A86FF"/>
+                            <Label text="Cloud drive" style="-fx-text-fill: #777;"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- TRASH - CENTER -->
+                    <VBox spacing="5" alignment="CENTER" HBox.hgrow="ALWAYS">
+                        <HBox spacing="4" alignment="CENTER">
+                            <Label text="9%" style="-fx-font-size: 17; -fx-font-weight: bold;"/>
+                            <Label text="(8.76GB)" style="-fx-text-fill: #888;"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER">
+                            <Circle radius="4" fill="#FF4D6A"/>
+                            <Label text="Trash" style="-fx-text-fill: #777;"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- AVAILABLE - RIGHT -->
+                    <VBox spacing="5" alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
+                        <HBox spacing="4" alignment="CENTER_RIGHT">
+                            <Label text="20%" style="-fx-font-size: 17; -fx-font-weight: bold;"/>
+                            <Label text="(18.77GB)" style="-fx-text-fill: #888;"/>
+                        </HBox>
+                        <HBox spacing="4" alignment="CENTER_RIGHT">
+                            <Circle radius="4" fill="#E0E0E0"/>
+                            <Label text="Available" style="-fx-text-fill: #777;"/>
+                        </HBox>
+                    </VBox>
+
+                </HBox>
+
+
+                <ProgressBar prefWidth="650"
+                             progress="0.8"
+                             style="-fx-accent: #3A86FF;"/>
+
+            </children>
         </VBox>
     </HBox>
+
 
     <!-- RECENT ADDED -->
     <HBox alignment="CENTER">
