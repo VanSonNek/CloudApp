@@ -3,91 +3,86 @@ package com.example.demo.controller;
 import java.util.concurrent.Executors;
 
 import com.example.demo.ClientApiHandler;
-import com.example.demo.Main; 
+import com.example.demo.Main;
 
 import javafx.application.Platform;
-import javafx.fxml.FXML; // Thêm import Label
+import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField; // Thêm import Color
-import javafx.scene.paint.Color; // Cần thiết cho việc gọi API bất đồng bộ
-
-/* * ✅ ĐÃ XÓA: LoginRequest và LoginResponse
- * Hai lớp này nên được định nghĩa trong ClientApiHandler.java
- */
+import javafx.scene.control.TextField;
+import javafx.scene.paint.Color;
 
 public class LoginController {
 
-    @FXML
-    private TextField txtUsername;
+    private Main mainApp;
 
-    @FXML
-    private PasswordField txtPassword;
-    
-    // ✅ THÊM TRƯỜNG NÀY (Cần phải liên kết với FXML)
-    @FXML
-    private Label lblError; 
-    
-    private Main mainApp; // Tham chiếu đến Main Application
-    
-    /** Thiết lập liên kết đến Main Application */
+    @FXML private TextField txtUsername;   // Đảm bảo FXML có fx:id="txtUsername"
+    @FXML private PasswordField txtPassword; // Đảm bảo FXML có fx:id="txtPassword"
+    @FXML private Label lblError;          // Label để hiện lỗi (nếu có trong FXML)
+
+    // Liên kết với Main để chuyển cảnh
     public void setMainApp(Main mainApp) {
         this.mainApp = mainApp;
     }
 
-    // ✅ PHƯƠNG THỨC XỬ LÝ ĐĂNG NHẬP ĐÃ ĐƯỢC SỬA GỌN
+    /**
+     * Sự kiện khi nhấn nút Login
+     */
     @FXML
     public void login() {
+        // 1. Lấy dữ liệu
         String username = txtUsername.getText().trim();
         String password = txtPassword.getText();
 
+        // 2. Validate cơ bản
         if (username.isEmpty() || password.isEmpty()) {
-            showError("Vui lòng nhập đầy đủ Tên người dùng và Mật khẩu.");
+            showError("Vui lòng nhập Username và Password!");
             return;
         }
 
-        // Xóa thông báo lỗi cũ
+        // Reset thông báo lỗi đang hiện (nếu có)
         showError(""); 
+        System.out.println("Dang dang nhap voi user: " + username);
 
-        // Thực hiện đăng nhập trên một luồng khác để không làm treo UI
+        // 3. Gọi API Login (Chạy luồng riêng)
         Executors.newSingleThreadExecutor().execute(() -> {
-            try {
-                // Gọi API Login đã được định nghĩa trong ClientApiHandler
-                boolean success = ClientApiHandler.login(username, password);
+            boolean success = ClientApiHandler.login(username, password);
 
-                // Cập nhật UI trên JavaFX Application Thread
-                Platform.runLater(() -> {
-                    if (success) {
-                        System.out.println("--- Đăng nhập thành công! ---");
-                        if (mainApp != null) {
-                            mainApp.showDashboardScene(); 
-                        }
-                    } else {
-                        // Thất bại: Đã được xử lý lỗi trong ClientApiHandler (Status 401)
-                        showError("Tên người dùng hoặc mật khẩu không đúng.");
+            // 4. Cập nhật UI (Quay lại luồng JavaFX)
+            Platform.runLater(() -> {
+                if (success) {
+                    System.out.println("✅ Đăng nhập thành công!");
+                    if (mainApp != null) {
+                        mainApp.showDashboardScene(); // Chuyển sang màn hình chính
                     }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                Platform.runLater(() -> {
-                    showError("Lỗi kết nối Server.");
-                });
-            }
+                } else {
+                    showError("Sai tên đăng nhập hoặc mật khẩu!");
+                }
+            });
         });
     }
 
-    // ✅ PHƯƠNG THỨC HỖ TRỢ HIỂN THỊ LỖI
-    private void showError(String message) {
-        if (lblError != null) {
-            lblError.setText(message);
-            lblError.setTextFill(Color.web("#d00000")); // Màu đỏ cho lỗi
-        }
-    }
-
-    // Giữ nguyên logic chuyển màn hình đăng ký
+    /**
+     * Sự kiện khi nhấn nút Create Account / Sign Up
+     */
+    @FXML
     public void createAccount() {
         if (mainApp != null) {
             mainApp.showRegisterScene();
+        }
+    }
+
+    // Hàm hiển thị lỗi an toàn (tránh NullPointerException nếu chưa có Label)
+    private void showError(String message) {
+        if (lblError != null) {
+            lblError.setText(message);
+            lblError.setTextFill(Color.RED);
+            lblError.setVisible(true);
+        } else {
+            // Nếu chưa có Label trong giao diện thì in ra Console đỡ
+            if (!message.isEmpty()) {
+                System.err.println("Login Error: " + message);
+            }
         }
     }
 }

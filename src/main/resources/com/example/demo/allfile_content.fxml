@@ -15,7 +15,6 @@
         <Insets bottom="20" left="10" right="0" top="0"/>
     </padding>
 
-    <!-- ================= HEADER ================= -->
     <HBox alignment="CENTER">
         <HBox alignment="CENTER_LEFT" maxWidth="1003.0"
               prefHeight="70.0" prefWidth="995.0"
@@ -46,7 +45,6 @@
         </HBox>
     </HBox>
 
-    <!-- ================= BODY TITLE ================= -->
     <HBox alignment="CENTER" prefWidth="995">
         <HBox alignment="CENTER_LEFT" prefWidth="995" spacing="10">
 
@@ -55,12 +53,19 @@
             <Region HBox.hgrow="ALWAYS"/>
 
             <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-padding: 0 15 0 0;">
-                <Button fx:id="btnNew"
-                        alignment="CENTER"
-                        style="-fx-background-color: #3EA9F0; -fx-text-fill: white;
-                               -fx-padding: 8 16; -fx-background-radius: 6; -fx-font-weight: bold;"
-                        text="+ New">
-                </Button>
+                
+                <MenuButton fx:id="btnNew"
+                            alignment="CENTER"
+                            text="+ New"
+                            style="-fx-background-color: #3EA9F0; -fx-text-fill: white; 
+                                   -fx-padding: 8 16; -fx-background-radius: 6; -fx-font-weight: bold;">
+                    <items>
+                        <MenuItem fx:id="menuNewFolder" text="New Folder"/>
+                        <MenuItem fx:id="menuFileUpload" text="Upload File"/>
+                        <MenuItem fx:id="menuFolderUpload" text="Upload Folder"/>
+                    </items>
+                </MenuButton>
+
             </HBox>
 
         </HBox>
@@ -69,7 +74,6 @@
     <BorderPane prefHeight="1" prefWidth="995" maxWidth="995"
                 style="-fx-border-color: #D0D0D0; -fx-border-width: 0 0 1 0;"/>
 
-    <!-- ================= FOLDER SECTION ================= -->
     <HBox alignment="CENTER">
         <VBox prefWidth="995" spacing="15">
 
@@ -85,14 +89,11 @@
                 </MenuButton>
             </HBox>
 
-            <!-- ĐÃ THÊM fx:id → CHO PHÉP THÊM THƯ MỤC ĐỘNG -->
             <FlowPane fx:id="folderFlowPane" hgap="20" vgap="20" prefWidth="995">
-                <!-- Các thư mục sẽ được thêm bằng Java (không cần card mẫu nữa) -->
-            </FlowPane>
+                </FlowPane>
         </VBox>
     </HBox>
 
-    <!-- ================= FILES SECTION ================= -->
     <HBox alignment="CENTER">
         <VBox prefWidth="995" spacing="15">
 
@@ -108,10 +109,8 @@
                 </MenuButton>
             </HBox>
 
-            <!-- ĐÃ THÊM fx:id → CHO PHÉP THÊM FILE ĐỘNG -->
             <FlowPane fx:id="fileFlowPane" hgap="20" vgap="20" prefWidth="995">
-                <!-- Các file sẽ được thêm bằng Java (không cần card mẫu nữa) -->
-            </FlowPane>
+                </FlowPane>
         </VBox>
     </HBox>
 

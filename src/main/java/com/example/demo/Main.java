@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import com.example.demo.controller.LoginController;
 import com.example.demo.controller.RegisterController;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -24,8 +25,8 @@ public class Main extends Application {
         this.primaryStage = stage;
 
         // Mặc định mở trang login
-//        showLoginScene();
-        showDashboardScene();
+        showLoginScene();
+        //showDashboardScene();
     }
 
     // ==================== LOGIN ====================

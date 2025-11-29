@@ -1,335 +1,275 @@
 package com.example.demo;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Flow;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
-
-// Lớp hỗ trợ cho request tạo thư mục
+// Request/Response DTOs
 class CreateDirectoryRequest {
     public String name;
     public Long parentDirectoryId;
-
     public CreateDirectoryRequest(String name, Long parentDirectoryId) {
         this.name = name;
         this.parentDirectoryId = parentDirectoryId;
     }
 }
 
-// Lớp hỗ trợ cho Response khi tạo thư mục
-class CreateDirectoryResponse {
-    public Long id;
-    public String name;
-    public Long parentDirectoryId;
-    public Long userId;
-    // Thêm các trường khác nếu server trả về
-}
-
-// ✅ THÊM LỚP NÀY: Ánh xạ Response từ Server
 class DirectoryContentResponse {
     public List<ListItem.DirectoryDto> directories;
     public List<ListItem.FileDto> files;
 }
 
-// Lớp hỗ trợ cho Login (cần thiết nếu có)
 class LoginRequest {
     public String username;
     public String password;
-
-    public LoginRequest(String username, String password) {
-        this.username = username;
-        this.password = password;
-    }
+    public LoginRequest(String username, String password) { this.username = username; this.password = password; }
 }
 
-
-// Handler chứa logic mạng và trạng thái đăng nhập
 public class ClientApiHandler {
 
     private static final String SERVER_URL = "http://localhost:8080";
     private static final Gson gson = new Gson();
     private static final HttpClient client = HttpClient.newBuilder().build();
 
-    private static String username;
-    private static String password;
+    // ✅ THÊM BIẾN LƯU TOKEN
+    private static String jwtToken = null;
     private static boolean authenticated = false;
 
-    public static boolean isAuthenticated() {
-        return authenticated;
-    }
+    public static boolean isAuthenticated() { return authenticated; }
 
-    // ✅ SỬA LỖI: Implement phương thức createRequestBuilder
+    // Helper tạo Request (SỬA LẠI: Dùng Bearer Token)
     private static HttpRequest.Builder createRequestBuilder(String url) {
         HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(SERVER_URL + url))
-                .header("Content-Type", "application/json");
+                .uri(URI.create(SERVER_URL + url));
 
-        if (authenticated) {
-            String auth = username + ":" + password;
-            String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
-            builder.header("Authorization", "Basic " + encodedAuth);
+        if (authenticated && jwtToken != null) {
+             // ✅ Gửi Token chuẩn JWT thay vì Basic Auth
+             builder.header("Authorization", "Bearer " + jwtToken);
         }
         return builder;
     }
 
+    // --- LOGIN (SỬA LẠI: Lấy Token từ JSON) ---
     public static boolean login(String u, String p) {
         try {
-            LoginRequest request = new LoginRequest(u, p);
-            HttpRequest httpRequest = HttpRequest.newBuilder()
+            String jsonInputString = String.format("{\"username\": \"%s\", \"password\": \"%s\"}", u, p);
+            HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(SERVER_URL + "/auth/login"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonInputString))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                // ✅ Parse JSON để lấy Token: {"token": "ey..."}
+                JsonObject json = gson.fromJson(response.body(), JsonObject.class);
+                if (json.has("token")) {
+                    jwtToken = json.get("token").getAsString();
+                    authenticated = true;
+                    System.out.println("🔑 Đã lưu Token: " + jwtToken.substring(0, 15) + "...");
+                    return true;
+                }
+            } else {
+                System.err.println("Login Failed: " + response.statusCode());
+            }
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // --- REGISTER ---
+    public static boolean register(String username, String email, String password) {
+        try {
+            String jsonInputString = String.format("{\"username\": \"%s\", \"email\": \"%s\", \"password\": \"%s\"}", username, email, password);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(SERVER_URL + "/auth/register"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonInputString))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return response.statusCode() == 200;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // --- CREATE FOLDER (Async) ---
+    public static void createFolder(String name, Long parentDirectoryId) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            createFolderSync(name, parentDirectoryId);
+        });
+    }
+
+    // --- CREATE FOLDER (Sync - Fix lỗi trả về null) ---
+    private static Long createFolderSync(String name, Long parentDirectoryId) {
+        try {
+            CreateDirectoryRequest request = new CreateDirectoryRequest(name, parentDirectoryId);
+            HttpRequest httpRequest = createRequestBuilder("/api/directories")
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(request)))
                     .build();
 
             HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
-            if (response.statusCode() == 200) {
-                username = u;
-                password = p;
-                authenticated = true;
-                return true;
+            if (response.statusCode() == 200 || response.statusCode() == 201) {
+                JsonObject json = gson.fromJson(response.body(), JsonObject.class);
+                return json.get("id").getAsLong();
             } else {
-                authenticated = false;
-                return false;
+                System.err.println("❌ Lỗi tạo folder '" + name + "': " + response.statusCode());
             }
         } catch (Exception e) {
             e.printStackTrace();
-            authenticated = false;
-            return false;
         }
+        return null;
     }
 
-    public static void createFolder(String name, Long parentDirectoryId) {
-        Executors.newSingleThreadExecutor().execute(() -> {
-            try {
-                CreateDirectoryRequest request = new CreateDirectoryRequest(name, parentDirectoryId);
-                HttpRequest httpRequest = createRequestBuilder("/api/directories")
-                        .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(request)))
-                        .build();
-
-                HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-
-                if (response.statusCode() == 201) {
-                    System.out.println("Tạo thư mục thành công: " + response.body());
-                } else {
-                    System.err.println("Tạo thư mục thất bại. Status: " + response.statusCode());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    // ✅ SỬA LỖI LOGIC MẠNG: Hàm chung để gọi API content
+    // --- LIST FILES ---
     private static DirectoryContentResponse getDirectoryContent(Long directoryId) throws Exception {
-        String url = "/api/directories/content";
-        if (directoryId != null) {
-            // Thêm tham số directoryId vào URL
-            url += "?directoryId=" + directoryId;
-        }
-
+        String url = "/api/directories/" + (directoryId == null ? "0" : directoryId);
+        
         HttpRequest httpRequest = createRequestBuilder(url)
                 .GET()
                 .build();
 
         HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-
         if (response.statusCode() == 200) {
             return gson.fromJson(response.body(), DirectoryContentResponse.class);
         } else {
-            System.err.println("Lỗi tải nội dung thư mục: " + response.body());
-            throw new IOException("Lỗi Server: " + response.statusCode());
+            System.err.println("❌ Lỗi lấy danh sách file: " + response.statusCode());
         }
+        return null;
     }
 
-    // ✅ SỬA LỖI LOGIC MẠNG: getDirectories gọi hàm chung
     public static List<ListItem.DirectoryDto> getDirectories(Long parentId) throws Exception {
-        DirectoryContentResponse response = getDirectoryContent(parentId);
-        return response != null ? response.directories : Collections.emptyList();
+        DirectoryContentResponse res = getDirectoryContent(parentId);
+        return res != null ? res.directories : Collections.emptyList();
     }
 
-    // ✅ SỬA LỖI LOGIC MẠNG: getFiles gọi hàm chung
     public static List<ListItem.FileDto> getFiles(Long directoryId) throws Exception {
-        DirectoryContentResponse response = getDirectoryContent(directoryId);
-        return response != null ? response.files : Collections.emptyList();
+        DirectoryContentResponse res = getDirectoryContent(directoryId);
+        return res != null ? res.files : Collections.emptyList();
     }
 
-    // ================= UPLOAD FILE (Giữ nguyên logic Multipart) =================
-    private static final String BOUNDARY = "----WebKitFormBoundary" + System.currentTimeMillis();
-
+    // --- UPLOAD FILE ---
     public static void uploadFile(File file, Long directoryId) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            try {
-                String url = "/api/files/upload";
-                if (directoryId != null) {
-                    url += "?directoryId=" + directoryId;
-                }
-
-                HttpRequest httpRequest = createRequestBuilder(url)
-                        .header("Content-Type", "multipart/form-data; boundary=" + BOUNDARY)
-                        .POST(new MultipartBodyPublisher(file, directoryId))
-                        .build();
-
-                HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-
-                if (response.statusCode() == 200) {
-                    System.out.println("Tải file thành công: " + response.body());
-                } else {
-                    System.err.println("Tải file thất bại. Status: " + response.statusCode());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            uploadFileSync(file, directoryId);
         });
     }
 
-    public static void uploadDirectory(File dir, Long currentDirectoryId) {
-        // Cần thêm logic upload thư mục
+    // ✅ SỬA LỖI UPLOAD: Dùng BodyPublishers.concat
+    private static void uploadFileSync(File file, Long directoryId) {
+        try {
+            String url = "/api/files/upload";
+            if (directoryId != null) url += "?parentDirectoryId=" + directoryId;
+
+            String boundary = "----WebKitFormBoundary" + System.currentTimeMillis();
+            
+            String mimeType = Files.probeContentType(file.toPath());
+            if (mimeType == null) mimeType = "application/octet-stream";
+            
+            String header = "--" + boundary + "\r\n" +
+                            "Content-Disposition: form-data; name=\"file\"; filename=\"" + file.getName() + "\"\r\n" +
+                            "Content-Type: " + mimeType + "\r\n\r\n";
+            
+            String footer = "\r\n--" + boundary + "--\r\n";
+
+            HttpRequest.BodyPublisher body = HttpRequest.BodyPublishers.concat(
+                    HttpRequest.BodyPublishers.ofString(header),
+                    HttpRequest.BodyPublishers.ofFile(file.toPath()),
+                    HttpRequest.BodyPublishers.ofString(footer)
+            );
+
+            HttpRequest httpRequest = createRequestBuilder(url)
+                    .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                    .POST(body)
+                    .build();
+
+            HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            System.out.println("Upload " + file.getName() + ": " + response.statusCode());
+
+        } catch (Exception e) {
+            System.err.println("Lỗi upload: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
-    // Lớp nội bộ để hỗ trợ upload multipart/form-data
-    static class MultipartBodyPublisher implements HttpRequest.BodyPublisher {
-        private final File file;
-        private final Long directoryId;
-        private final byte[] header;
-        private final byte[] footer;
-        private final long totalLength;
+    // --- UPLOAD FOLDER ---
+    public static void uploadDirectory(File dir, Long parentServerId) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            uploadDirectoryRecursive(dir, parentServerId);
+        });
+    }
 
-        public MultipartBodyPublisher(File file, Long directoryId) throws IOException {
-            this.file = file;
-            this.directoryId = directoryId;
+    private static void uploadDirectoryRecursive(File localDir, Long parentServerId) {
+        System.out.println("📂 Đang tạo folder: " + localDir.getName());
+        Long newServerFolderId = createFolderSync(localDir.getName(), parentServerId);
 
-            String boundary = BOUNDARY;
-
-            // Xây dựng Header cho file
-            String filePart = String.format("--%s\r\nContent-Disposition: form-data; name=\"file\"; filename=\"%s\"\r\nContent-Type: %s\r\n\r\n",
-                    boundary, file.getName(), Files.probeContentType(file.toPath()));
-            this.header = filePart.getBytes();
-
-            // Xây dựng Footer
-            this.footer = ("\r\n--" + boundary + "--\r\n").getBytes();
-
-            this.totalLength = header.length + file.length() + footer.length;
+        if (newServerFolderId == null) {
+            System.err.println("❌ Không thể tạo folder " + localDir.getName() + ", dừng upload nhánh này.");
+            return;
         }
 
-        @Override
-        public long contentLength() {
-            return totalLength;
-        }
-
-        @Override
-        public void subscribe(java.util.concurrent.Flow.Subscriber<? super java.nio.ByteBuffer> subscriber) {
-            try {
-                subscriber.onSubscribe(new FileSubscription(subscriber, file, header, footer));
-            } catch (FileNotFoundException e) {
-                subscriber.onError(e);
-            }
-        }
-
-        // ... (FileSubscription class)
-        static class FileSubscription implements Flow.Subscription {
-            private final Flow.Subscriber<? super ByteBuffer> subscriber;
-            private final File file;
-            private final byte[] header;
-            private final byte[] footer;
-            private FileInputStream fileStream;
-            private int state = 0; // 0: header, 1: file, 2: footer, 3: finished
-            private int headerPos = 0;
-            private int footerPos = 0;
-            private long currentPosition = 0;
-
-            public FileSubscription(Flow.Subscriber<? super ByteBuffer> subscriber, File file, byte[] header, byte[] footer) throws FileNotFoundException {
-                this.subscriber = subscriber;
-                this.file = file;
-                this.header = header;
-                this.footer = footer;
-                this.fileStream = new FileInputStream(file);
-            }
-
-            @Override
-            public void request(long n) {
-                if (n <= 0) {
-                    subscriber.onError(new IllegalArgumentException("request must be positive"));
-                    return;
+        File[] files = localDir.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isFile()) {
+                    uploadFileSync(f, newServerFolderId);
+                } else if (f.isDirectory()) {
+                    uploadDirectoryRecursive(f, newServerFolderId);
                 }
+            }
+        }
+    }
+
+    public static File downloadFileToTemp(Long fileId, String fileName) {
+        try {
+            String url = "/api/files/download/" + fileId;
+            // Tạo request GET có kèm Token (nếu cần)
+            HttpRequest request = createRequestBuilder(url).GET().build();
+
+            // Gửi request và nhận dữ liệu dưới dạng luồng (InputStream)
+            HttpResponse<java.io.InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+            if (response.statusCode() == 200) {
+                // 1. Tách đuôi file (ví dụ .jpg, .docx) để tạo file tạm đúng định dạng
+                String extension = "";
+                int i = fileName.lastIndexOf('.');
+                if (i > 0) {
+                    extension = fileName.substring(i);
+                } else {
+                    extension = ".tmp"; // Mặc định nếu không có đuôi
+                }
+
+                // 2. Tạo file tạm trong thư mục Temp của máy tính
+                File tempFile = File.createTempFile("skybox_", extension);
                 
-                try {
-                    byte[] buffer = new byte[(int) Math.min(n, 8192)]; 
-                    int bytesRead = 0;
-                    int len = buffer.length;
-                    int off = 0;
-                    
-                    while (len > 0 && state < 3) {
-                        int currentRead = 0;
-                        
-                        if (state == 0) { // Đọc Header
-                            int remaining = header.length - headerPos;
-                            currentRead = Math.min(len, remaining);
-                            System.arraycopy(header, headerPos, buffer, off, currentRead);
-                            headerPos += currentRead;
-                            if (headerPos == header.length) state = 1;
-                        } else if (state == 1) { // Đọc File
-                            currentRead = fileStream.read(buffer, off, len);
-                            if (currentRead == -1) {
-                                state = 2;
-                                fileStream.close();
-                                continue; 
-                            }
-                        } else if (state == 2) { // Đọc Footer
-                            int remaining = footer.length - footerPos;
-                            currentRead = Math.min(len, remaining);
-                            System.arraycopy(footer, footerPos, buffer, off, currentRead);
-                            footerPos += currentRead;
-                            if (footerPos == footer.length) state = 3;
-                        }
-                        
-                        if (currentRead > 0) {
-                            bytesRead += currentRead;
-                            off += currentRead;
-                            len -= currentRead;
-                            currentPosition += currentRead;
-                        } else if (state == 3) {
-                            break; 
-                        } else if (currentRead == 0) {
-                            break; 
-                        }
-                    }
-
-                    if (bytesRead > 0) {
-                        subscriber.onNext(ByteBuffer.wrap(buffer, 0, bytesRead));
-                    }
-                    
-                    if (state == 3) {
-                        subscriber.onComplete();
-                    }
-                    
-                } catch (IOException e) {
-                    subscriber.onError(e);
-                }
+                // 3. Ghi dữ liệu từ Server vào file tạm này
+                java.nio.file.Files.copy(response.body(), tempFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                
+                System.out.println("⬇ Đã tải file về: " + tempFile.getAbsolutePath());
+                return tempFile;
+            } else {
+                System.err.println("❌ Lỗi tải file: Server trả về code " + response.statusCode());
             }
-
-            @Override
-            public void cancel() {
-                try {
-                    if (fileStream != null) fileStream.close();
-                } catch (IOException e) {
-                    // Ignore
-                }
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return null;
     }
+
 }

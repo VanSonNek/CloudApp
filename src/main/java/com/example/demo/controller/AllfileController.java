@@ -1,6 +1,10 @@
 package com.example.demo.controller;
 
+import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.concurrent.Executors;
 
@@ -9,396 +13,304 @@ import com.example.demo.ListItem;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuButton;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import javafx.stage.Popup;
+import javafx.stage.Stage;
 
 public class AllfileController {
 
-    @FXML private Button btnNew;
+    @FXML private MenuButton btnNew;
+    @FXML private MenuItem menuNewFolder;
+    @FXML private MenuItem menuFileUpload;
+    @FXML private MenuItem menuFolderUpload;
 
     @FXML private FlowPane folderFlowPane;
     @FXML private FlowPane fileFlowPane;
 
-    @FXML private javafx.scene.image.ImageView avatarBtn;
-
-
-
-    // ✅ SỬA 1: Bỏ 'final' để có thể cập nhật ID thư mục
-    private Long currentDirectoryId = null; // null = root
+    // Biến lưu ID thư mục đang đứng (null là thư mục gốc)
+    private Long currentDirectoryId = null;
 
     @FXML
     public void initialize() {
+        // Cấu hình sự kiện cho menu
+        menuNewFolder.setOnAction(e -> handleCreateFolder());
+        menuFileUpload.setOnAction(e -> handleUploadFile());
+        menuFolderUpload.setOnAction(e -> handleUploadFolder());
 
-        System.out.println("Allfile content loaded!");
-        setupNewMenu();
-
+        // Load dữ liệu lần đầu (Root)
         loadDataFromServer();
     }
 
-    // ================= TẢI DỮ LIỆU =================
-    private void loadDataFromServer() {
+    // --- HÀM ĐIỀU HƯỚNG (NAVIGATE) ---
+    private void navigateTo(Long folderId) {
+        this.currentDirectoryId = folderId;
+        System.out.println("📂 Chuyển đến thư mục ID: " + (folderId == null ? "ROOT" : folderId));
+        
+        // Clear giao diện cũ
+        folderFlowPane.getChildren().clear();
+        fileFlowPane.getChildren().clear();
+        
+        loadDataFromServer();
+    }
+
+    // --- TẢI DỮ LIỆU ---
+    public void loadDataFromServer() {
         if (!ClientApiHandler.isAuthenticated()) {
-            showEmptyMessage("Vui lòng đăng nhập để xem dữ liệu");
+            showAlert("Chưa đăng nhập", "Vui lòng đăng nhập lại!", Alert.AlertType.WARNING);
             return;
         }
 
-        folderFlowPane.getChildren().clear();
-        fileFlowPane.getChildren().clear();
-        folderFlowPane.getChildren().add(createLoadingCard());
-        fileFlowPane.getChildren().add(createLoadingCard());
-
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
-                // Tải dữ liệu dựa trên currentDirectoryId hiện tại
-                List<ListItem> folders = fetchDirectories(currentDirectoryId);
-                List<ListItem> files = fetchFiles(currentDirectoryId);
+                // Lấy danh sách Folder & File từ Server
+                List<ListItem.DirectoryDto> dirs = ClientApiHandler.getDirectories(currentDirectoryId);
+                List<ListItem.FileDto> files = ClientApiHandler.getFiles(currentDirectoryId);
 
-                Platform.runLater(() -> {
-                    folderFlowPane.getChildren().clear();
-                    fileFlowPane.getChildren().clear();
-
-                    // Thêm nút quay lại nếu không phải là thư mục gốc
-                    if (currentDirectoryId != null) {
-                        folderFlowPane.getChildren().add(createBackCard());
-                    }
-
-                    renderFolders(folders);
-                    renderFiles(files);
-
-                    if (folders.isEmpty() && currentDirectoryId == null) {
-                        folderFlowPane.getChildren().add(createEmptyCard("Không có thư mục"));
-                    } else if (folders.isEmpty() && currentDirectoryId != null && folderFlowPane.getChildren().size() == 1) {
-                         // Nếu chỉ có nút Back và không có folder nào
-                         folderFlowPane.getChildren().add(createEmptyCard("Thư mục trống"));
-                    }
-
-                    if (files.isEmpty()) fileFlowPane.getChildren().add(createEmptyCard("Không có file nào"));
-                });
-
+                // Cập nhật UI
+                Platform.runLater(() -> updateUI(dirs, files));
             } catch (Exception e) {
-                Platform.runLater(() -> {
-                    folderFlowPane.getChildren().clear();
-                    fileFlowPane.getChildren().clear();
-                    folderFlowPane.getChildren().add(createEmptyCard("Lỗi tải dữ liệu: " + e.getMessage()));
-                    fileFlowPane.getChildren().add(createEmptyCard(""));
-                });
                 e.printStackTrace();
+                Platform.runLater(() -> showAlert("Lỗi kết nối", e.getMessage(), Alert.AlertType.ERROR));
             }
         });
     }
-    
-    // ✅ SỬA 2: Thêm phương thức để cập nhật ID thư mục và tải lại
-    private void openDirectory(Long directoryId) {
-        if (directoryId != null) {
-            System.out.println("--- Đang chuyển thư mục đến ID: " + directoryId + " ---");
-        } else {
-            System.out.println("--- Đang trở về thư mục Gốc ---");
+
+    // --- CẬP NHẬT GIAO DIỆN ---
+    private void updateUI(List<ListItem.DirectoryDto> directories, List<ListItem.FileDto> files) {
+        folderFlowPane.getChildren().clear();
+        fileFlowPane.getChildren().clear();
+
+        // 1. Nút "BACK" nếu đang ở thư mục con
+        if (currentDirectoryId != null) {
+            VBox backCard = createBackCard();
+            folderFlowPane.getChildren().add(backCard);
         }
-        this.currentDirectoryId = directoryId;
-        loadDataFromServer();
-    }
 
-    // ================= RENDER THƯ MỤC =================
-    private void renderFolders(List<ListItem> folders) {
-        for (ListItem item : folders) {
-            folderFlowPane.getChildren().add(createFolderCard(item));
+        // 2. Render Folder
+        for (ListItem.DirectoryDto dir : directories) {
+            VBox card = createCard(dir.name, "/com/example/demo/imgs/folder.png", true, dir.id);
+            folderFlowPane.getChildren().add(card);
         }
-    }
-    
-    // Thẻ quay lại (Tạm thời quay về gốc vì thiếu thông tin parentId từ Server)
-    private VBox createBackCard() {
-        VBox card = new VBox(12);
-        card.setPrefWidth(230);
-        card.setPadding(new Insets(16));
-        card.setStyle("-fx-background-color: #F8F8F8; -fx-background-radius: 12; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0.2, 0, 3);");
-        card.setAlignment(Pos.CENTER_LEFT);
-        card.setCursor(Cursor.HAND);
 
-        // Icon (có thể thay bằng icon local)
-        ImageView icon = new ImageView("https://img.icons8.com/ios-filled/50/reply-arrow.png");
-        icon.setFitWidth(32);
-        icon.setFitHeight(32);
-
-        Label nameLabel = new Label("..");
-        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-
-        Label typeLabel = new Label("Quay lại");
-        typeLabel.setStyle("-fx-text-fill: #888; -fx-font-size: 12px;");
-
-        card.getChildren().addAll(icon, nameLabel, typeLabel);
-        
-        card.setOnMouseClicked(e -> {
-            // Quay về thư mục gốc (hoặc Parent Directory ID nếu có)
-            openDirectory(null); 
-        });
-
-        return card;
-    }
-
-
-    private VBox createFolderCard(ListItem item) {
-        VBox card = new VBox(12);
-        card.setPrefWidth(230);
-        card.setPadding(new Insets(16));
-        card.setStyle("-fx-background-color: #FFFFFF; -fx-background-radius: 12; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0.2, 0, 3);");
-        card.setCursor(Cursor.HAND);
-
-        // Icon thư mục (dùng online)
-        ImageView icon = new ImageView("https://img.icons8.com/fluency/48/folder-invoices.png");
-        icon.setFitWidth(32);
-        icon.setFitHeight(32);
-
-        Label nameLabel = new Label(item.getName());
-        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-        nameLabel.setMaxWidth(200);
-        nameLabel.setWrapText(true);
-
-        Label typeLabel = new Label("Thư mục");
-        typeLabel.setStyle("-fx-text-fill: #888; -fx-font-size: 12px;");
-
-        HBox top = new HBox(10, icon, new Region());
-        HBox.setHgrow(top.getChildren().get(1), Priority.ALWAYS);
-        MenuButton menu = new MenuButton("...");
-        menu.setStyle("-fx-background-color: transparent; -fx-font-size: 18px;");
-        top.getChildren().add(menu);
-
-        card.getChildren().addAll(top, nameLabel, typeLabel);
-
-        // ✅ SỬA 3: Double click để vào thư mục
-        card.setOnMouseClicked(e -> {
-            if (e.getClickCount() == 2) {
-                System.out.println("Mở thư mục: " + item.getName() + " (ID: " + item.getId() + ")");
-                openDirectory(item.getId()); // Gọi hàm chuyển thư mục
-            }
-        });
-
-        return card;
-    }
-
-    // ================= RENDER FILE (Không đổi) =================
-    private void renderFiles(List<ListItem> files) {
-        for (ListItem item : files) {
-            fileFlowPane.getChildren().add(createFileCard(item));
+        // 3. Render File
+        for (ListItem.FileDto file : files) {
+            String iconPath = "/com/example/demo/imgs/file.png";
+            String name = file.originalFilename.toLowerCase();
+            if (name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg")) iconPath = "/com/example/demo/imgs/image.png";
+            else if (name.endsWith(".pdf")) iconPath = "/com/example/demo/imgs/pdf.png";
+            
+            VBox card = createCard(file.originalFilename, iconPath, false, file.id);
+            fileFlowPane.getChildren().add(card);
         }
     }
 
-    private VBox createFileCard(ListItem item) {
+    // --- TẠO CARD (HỖ TRỢ CLICK ĐÚP) ---
+    private VBox createCard(String title, String iconPath, boolean isFolder, Long itemId) {
         VBox card = new VBox(10);
-        card.setPrefWidth(230);
-        card.setPadding(new Insets(12));
-        card.setStyle("-fx-background-color: #FFFFFF; -fx-background-radius: 12; " +
-                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0.2, 0, 3);");
+        card.setAlignment(Pos.CENTER);
+        card.setPrefSize(120, 120);
+        
+        String defaultStyle = "-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2); -fx-cursor: hand;";
+        card.setStyle(defaultStyle);
+        
+        card.setOnMouseEntered(e -> card.setStyle(defaultStyle + "-fx-background-color: #E3F2FD;"));
+        card.setOnMouseExited(e -> card.setStyle(defaultStyle));
 
-        StackPane preview = new StackPane();
-        preview.setPrefSize(206, 130);
-        preview.setStyle("-fx-background-color: #F5F5F5; -fx-background-radius: 10;");
+        try {
+            // Load icon an toàn
+            Image img;
+            try {
+                img = new Image(getClass().getResourceAsStream(iconPath));
+            } catch (Exception ex) {
+                // Fallback nếu thiếu icon cụ thể
+                img = new Image(getClass().getResourceAsStream(isFolder ? "/com/example/demo/imgs/folder.png" : "/com/example/demo/imgs/file.png"));
+            }
+            ImageView icon = new ImageView(img);
+            icon.setFitWidth(40);
+            icon.setFitHeight(40);
+            card.getChildren().add(icon);
+        } catch (Exception e) { /* Bỏ qua */ }
 
-        String type = item.getType() != null ? item.getType().toLowerCase() : "";
-        String iconUrl = "https://img.icons8.com/color/96/file.png";
-        if (type.contains("pdf")) iconUrl = "https://img.icons8.com/color/96/pdf.png";
-        else if (type.contains("image") || type.contains("png") || type.contains("jpg"))
-            iconUrl = "https://img.icons8.com/color/96/image.png";
-        else if (type.contains("video") || type.contains("mp4"))
-            iconUrl = "https://img.icons8.com/color/96/video.png";
-
-        ImageView previewIcon = new ImageView(iconUrl);
-        previewIcon.setFitWidth(60);
-        previewIcon.setFitHeight(60);
-        preview.getChildren().add(previewIcon);
-
-        HBox bottom = new HBox(8);
-        bottom.setAlignment(Pos.CENTER_LEFT);
-        CheckBox check = new CheckBox();
-        Label name = new Label(item.getName());
-        name.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
-        name.setMaxWidth(140);
+        Label name = new Label(title);
         name.setWrapText(true);
+        name.setMaxWidth(100);
+        name.setAlignment(Pos.CENTER);
+        card.getChildren().add(name);
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        MenuButton menu = new MenuButton("...");
-        menu.setStyle("-fx-background-color: transparent;");
+        // ✅ SỰ KIỆN CLICK ĐÚP
+        card.setOnMouseClicked(event -> {
+            if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
+                if (isFolder) {
+                    navigateTo(itemId);
+                } else {
+                    handleOpenFile(itemId, title);
+                }
+            }
+        });
 
-        bottom.getChildren().addAll(check, name, spacer, menu);
-
-        Label size = new Label(item.getSize());
-        size.setStyle("-fx-text-fill: #888; -fx-font-size: 12px;");
-
-        card.getChildren().addAll(preview, bottom, size);
         return card;
     }
 
-    // ================= CÁC PHƯƠNG THỨC KHÁC (Không đổi) =================
-    private VBox createLoadingCard() {
-        return createEmptyCard("Đang tải...");
+    // --- TẠO CARD BACK ---
+    private VBox createBackCard() {
+        VBox card = new VBox(10);
+        card.setAlignment(Pos.CENTER);
+        card.setPrefSize(120, 120);
+        card.setStyle("-fx-background-color: #f0f0f0; -fx-background-radius: 10; -fx-cursor: hand; -fx-border-color: #ccc; -fx-border-style: dashed; -fx-border-radius: 10;");
+
+        Label lb = new Label("⬅ Quay lại");
+        lb.setStyle("-fx-font-weight: bold; -fx-text-fill: #555;");
+        card.getChildren().add(lb);
+
+        card.setOnMouseClicked(e -> navigateTo(null)); // Về Root
+        return card;
     }
 
-    private VBox createEmptyCard(String msg) {
-        VBox v = new VBox(10);
-        v.setAlignment(Pos.CENTER);
-        v.setPrefWidth(230);
-        v.setPadding(new Insets(40));
-        Label l = new Label(msg);
-        l.setStyle("-fx-text-fill: #999; -fx-font-size: 14px;");
-        v.getChildren().add(l);
-        return v;
-    }
+    // ================= XỬ LÝ MỞ FILE (PREVIEW) =================
 
-    private void showEmptyMessage(String msg) {
-        Platform.runLater(() -> {
-            folderFlowPane.getChildren().add(createEmptyCard(msg));
-            fileFlowPane.getChildren().add(createEmptyCard(""));
-        });
+    private void handleOpenFile(Long fileId, String fileName) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            Platform.runLater(() -> showAlert("Đang tải", "Đang tải file để xem...", Alert.AlertType.INFORMATION));
 
-        setupAvatarMenu();
+            // 1. Tải file về Temp
+            File file = ClientApiHandler.downloadFileToTemp(fileId, fileName);
 
-    }
-    // ==================== AVATAR MENU ====================
-    private void setupAvatarMenu() {
+            Platform.runLater(() -> {
+                if (file != null && file.exists()) {
+                    String lowerName = fileName.toLowerCase();
 
-        Popup popup = new Popup();
-        popup.setAutoHide(true);
-
-        VBox box = new VBox();
-        box.setSpacing(5);
-        box.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
-        box.setPadding(new Insets(10));
-        box.setEffect(new javafx.scene.effect.DropShadow(10, Color.rgb(0, 0, 0, 0.18)));
-
-        // Sử dụng lại createMenuRow() giống menu "+ New"
-        VBox profile = createMenuRow("Thông tin cá nhân");
-        VBox account = createMenuRow("Tài khoản");
-        VBox logout = createMenuRow("Đăng xuất");
-
-        box.getChildren().addAll(profile, account, logout);
-        popup.getContent().add(box);
-
-        // Hiện popup khi nhấn vào avatar
-        avatarBtn.setOnMouseClicked(e -> {
-            popup.show(
-                    avatarBtn,
-                    avatarBtn.localToScreen(avatarBtn.getBoundsInLocal()).getMaxX() - 120,
-                    avatarBtn.localToScreen(avatarBtn.getBoundsInLocal()).getMaxY() + 5
-            );
-        });
-
-        // Sự kiện bấm từng item
-        profile.setOnMouseClicked(e -> {
-            popup.hide();
-            System.out.println("Đi đến trang thông tin cá nhân");
-        });
-
-        account.setOnMouseClicked(e -> {
-            popup.hide();
-            System.out.println("Trang tài khoản");
-        });
-
-        logout.setOnMouseClicked(e -> {
-            popup.hide();
-            System.out.println("Đăng xuất…");
-
-            // Nếu muốn trở lại login → đưa Main vào AllfileController
-            // mainApp.showLoginScene();
+                    // 2. Phân loại để hiển thị
+                    if (lowerName.endsWith(".png") || lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".gif") || lowerName.endsWith(".bmp")) {
+                        showImagePreview(file, fileName);
+                    } 
+                    else if (lowerName.endsWith(".txt") || lowerName.endsWith(".java") || lowerName.endsWith(".xml") || lowerName.endsWith(".json") || lowerName.endsWith(".html") || lowerName.endsWith(".css") || lowerName.endsWith(".js")) {
+                        showTextPreview(file, fileName);
+                    } 
+                    else {
+                        // File khác -> Mở bằng app ngoài
+                        openInExternalApp(file);
+                    }
+                } else {
+                    showAlert("Lỗi", "Không thể tải file về.", Alert.AlertType.ERROR);
+                }
+            });
         });
     }
 
+    // --- TRÌNH XEM ẢNH ---
+    private void showImagePreview(File file, String title) {
+        try {
+            Stage previewStage = new Stage();
+            previewStage.setTitle("Xem ảnh: " + title);
 
-    private void setupNewMenu() {
-        Popup popup = new Popup();
-        popup.setAutoHide(true);
-        VBox box = new VBox(5);
-        box.setStyle("-fx-background-color: white; -fx-background-radius: 10; " +
-                "-fx-effect: dropshadow(gaussian, black, 10, 0.2, 0, 3);");
-        box.setPadding(new Insets(10));
+            ImageView imageView = new ImageView(new Image(file.toURI().toString()));
+            imageView.setPreserveRatio(true);
+            imageView.setFitWidth(800);
+            imageView.setFitHeight(600);
 
-        VBox newFolder = createMenuRow("New Folder");
-        VBox uploadFile = createMenuRow("Upload File");
-        VBox uploadFolder = createMenuRow("Upload Folder");
+            StackPane root = new StackPane(imageView);
+            root.setStyle("-fx-background-color: rgba(0,0,0,0.9);"); // Nền tối
+            
+            // Click để đóng
+            root.setOnMouseClicked(e -> previewStage.close());
 
-        newFolder.setOnMouseClicked(e -> { popup.hide(); showNewFolderDialog(); });
-        uploadFile.setOnMouseClicked(e -> { popup.hide(); handleUploadFile(); });
-        uploadFolder.setOnMouseClicked(e -> { popup.hide(); handleUploadFolder(); });
-
-        box.getChildren().addAll(newFolder, uploadFile, uploadFolder);
-        popup.getContent().add(box);
-
-        btnNew.setOnAction(e -> popup.show(btnNew,
-                btnNew.localToScreen(btnNew.getBoundsInLocal()).getMinX(),
-                btnNew.localToScreen(btnNew.getBoundsInLocal()).getMaxY() + 5));
+            Scene scene = new Scene(root, 900, 700);
+            previewStage.setScene(scene);
+            previewStage.centerOnScreen();
+            previewStage.show();
+            
+        } catch (Exception e) {
+            showAlert("Lỗi", "Không thể hiển thị ảnh này.", Alert.AlertType.ERROR);
+        }
     }
 
-    private VBox createMenuRow(String title) {
-        HBox row = new HBox(10);
-        row.setPadding(new Insets(10));
-        row.setCursor(Cursor.HAND);
-        Label label = new Label(title);
-        label.setStyle("-fx-font-size: 14px;");
-        row.getChildren().add(label);
-        row.setOnMouseEntered(e -> row.setStyle("-fx-background-color: #EEF6FF; -fx-background-radius: 6;"));
-        row.setOnMouseExited(e -> row.setStyle("-fx-background-color: transparent;"));
-        return new VBox(row);
+    // --- TRÌNH ĐỌC TEXT ---
+    private void showTextPreview(File file, String title) {
+        try {
+            Stage previewStage = new Stage();
+            previewStage.setTitle("Đọc file: " + title);
+
+            TextArea textArea = new TextArea();
+            textArea.setEditable(false);
+            textArea.setWrapText(true);
+            
+            // Đọc nội dung file
+            String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+            textArea.setText(content);
+            textArea.setStyle("-fx-font-family: 'Consolas', 'Monospaced'; -fx-font-size: 14px;");
+
+            StackPane root = new StackPane(textArea);
+            Scene scene = new Scene(root, 800, 600);
+            
+            previewStage.setScene(scene);
+            previewStage.show();
+
+        } catch (Exception e) {
+            showAlert("Lỗi", "Không thể đọc nội dung file text.", Alert.AlertType.ERROR);
+        }
     }
 
-    private void showNewFolderDialog() {
-        if (!ClientApiHandler.isAuthenticated()) return;
+    // --- MỞ APP NGOÀI ---
+    private void openInExternalApp(File file) {
+        try {
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().open(file);
+            } else {
+                showAlert("Thông báo", "Đã tải file về máy (Không hỗ trợ xem trước).", Alert.AlertType.INFORMATION);
+            }
+        } catch (IOException e) {
+            showAlert("Lỗi", "Không tìm thấy ứng dụng để mở file này.", Alert.AlertType.ERROR);
+        }
+    }
+
+    // ================= CÁC HÀM TẠO/UPLOAD =================
+
+    private void handleCreateFolder() {
         TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Tạo thư mục mới");
-        dialog.setHeaderText("Nhập tên thư mục");
+        dialog.setTitle("New Folder");
+        dialog.setHeaderText("Tên thư mục mới:");
         dialog.showAndWait().ifPresent(name -> {
             if (!name.trim().isEmpty()) {
                 ClientApiHandler.createFolder(name.trim(), currentDirectoryId);
+                try { Thread.sleep(200); } catch (Exception e) {}
                 loadDataFromServer();
             }
         });
     }
 
     private void handleUploadFile() {
-        if (!ClientApiHandler.isAuthenticated()) return;
         FileChooser chooser = new FileChooser();
         File file = chooser.showOpenDialog(btnNew.getScene().getWindow());
         if (file != null) {
             ClientApiHandler.uploadFile(file, currentDirectoryId);
-            loadDataFromServer();
+            new java.util.Timer().schedule(new java.util.TimerTask() {
+                @Override public void run() { Platform.runLater(() -> loadDataFromServer()); }
+            }, 1000);
         }
     }
 
     private void handleUploadFolder() {
-        if (!ClientApiHandler.isAuthenticated()) return;
         DirectoryChooser chooser = new DirectoryChooser();
         File dir = chooser.showDialog(btnNew.getScene().getWindow());
         if (dir != null) {
             ClientApiHandler.uploadDirectory(dir, currentDirectoryId);
-            loadDataFromServer();
+            showAlert("Đang tải lên", "Thư mục đang được tải ngầm...", Alert.AlertType.INFORMATION);
         }
     }
 
-    // ================= LẤY DỮ LIỆU TỪ SERVER =================
-    private List<ListItem> fetchDirectories(Long parentId) throws Exception {
-        List<ListItem.DirectoryDto> dtos = ClientApiHandler.getDirectories(parentId);
-        return dtos.stream().map(ListItem::new).toList();
-    }
-
-    private List<ListItem> fetchFiles(Long directoryId) throws Exception {
-        List<ListItem.FileDto> dtos = ClientApiHandler.getFiles(directoryId);
-        return dtos.stream().map(ListItem::new).toList();
+    private void showAlert(String title, String content, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setContentText(content);
+        alert.show();
     }
 }
