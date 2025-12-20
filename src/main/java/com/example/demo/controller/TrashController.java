@@ -1,159 +1,178 @@
 package com.example.demo.controller;
 
+import com.example.demo.ClientApiHandler;
+import com.example.demo.ClientApiHandler.TrashResponse;
+import com.example.demo.util.IconHelper;
+
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.image.Image;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.util.Callback;
+
+import java.util.List;
+import java.util.concurrent.Executors;
 
 public class TrashController {
 
     @FXML
-    private ListView<Object> fileListView;
+    private ListView<TrashResponse> trashListView;
 
-    public static class Section {
-        String title;
-        public Section(String title) { this.title = title; }
-    }
-
-    public static class FileItem {
-        String name;
-        Image ownerAvatar;
-        String owner;
-        String size;
-        String location;
-
-        public FileItem(String name, Image ownerAvatar, String owner, String size, String location) {
-            this.name = name;
-            this.ownerAvatar = ownerAvatar;
-            this.owner = owner;
-            this.size = size;
-            this.location = location;
-        }
-    }
+    private ObservableList<TrashResponse> trashList = FXCollections.observableArrayList();
 
     @FXML
-    private void initialize() {
-        ObservableList<Object> items = FXCollections.observableArrayList();
-
-        // ========= DỮ LIỆU MẪU =========
-        items.add(new Section("Today"));
-        items.add(new FileItem("File của Sơn",
-                load("/com/example/demo/imgs/man.png"), "Ahihi", "2MB", "22/12/2025"));
-        items.add(new FileItem("File của Sơn",
-                load("/com/example/demo/imgs/man.png"), "Ahihi", "2MB", "22/12/2025"));
-        items.add(new FileItem("File của Sơn",
-                load("/com/example/demo/imgs/man.png"), "Ahihi", "2MB", "22/12/2025"));
-
-        items.add(new Section("Earlier this week"));
-        items.add(new FileItem("File của Sơn",
-                load("/com/example/demo/imgs/man.png"), "Ahihi", "2MB", "22/12/2025"));
-        fileListView.setItems(items);
-        fileListView.setCellFactory(list -> new MixedCell());
-
-        // ======= AUTO CHIỀU CAO =======
-        fileListView.setFixedCellSize(60);
-        fileListView.setPrefHeight(Region.USE_COMPUTED_SIZE);
-        fileListView.setMinHeight(Region.USE_PREF_SIZE);
-        fileListView.setMaxHeight(Double.MAX_VALUE); // cho phép mở rộng
-    }
-
-    private Image load(String path) {
-        try {
-            return new Image(getClass().getResourceAsStream(path));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private class MixedCell extends ListCell<Object> {
-        @Override
-        protected void updateItem(Object obj, boolean empty) {
-            super.updateItem(obj, empty);
-            if (empty || obj == null) {
-                setGraphic(null);
-                return;
+    public void initialize() {
+        // Cấu hình cách hiển thị từng dòng trong ListView
+        trashListView.setCellFactory(new Callback<ListView<TrashResponse>, ListCell<TrashResponse>>() {
+            @Override
+            public ListCell<TrashResponse> call(ListView<TrashResponse> param) {
+                return new TrashListCell();
             }
-            if (obj instanceof Section) {
-                Label section = new Label(((Section) obj).title);
-                section.getStyleClass().add("section-header");
-                setGraphic(section);
-            } else {
-                FileItem f = (FileItem) obj;
-                setGraphic(buildRow(f));
-            }
-        }
-    }
-
-    private GridPane buildRow(FileItem f) {
-        GridPane gp = new GridPane();
-        gp.getStyleClass().add("row");
-        gp.setHgap(10);
-        gp.setAlignment(Pos.CENTER_LEFT);
-        gp.setPrefHeight(48);
-
-        ColumnConstraints c0 = new ColumnConstraints(530);
-        ColumnConstraints c1 = new ColumnConstraints(140);
-        ColumnConstraints c2 = new ColumnConstraints(100);
-        ColumnConstraints c3 = new ColumnConstraints(120);
-        ColumnConstraints c4 = new ColumnConstraints(40); // thêm cột sao
-        gp.getColumnConstraints().addAll(c0, c1, c2, c3, c4);
-
-        // --- Name ---
-        HBox nameBox = new HBox(10);
-        nameBox.setAlignment(Pos.CENTER_LEFT);
-        Label name = new Label(f.name);
-        name.getStyleClass().add("file-name");
-        nameBox.getChildren().add(name);
-
-        // --- Owner ---
-        HBox ownerBox = new HBox(8);
-        ownerBox.setAlignment(Pos.CENTER_LEFT);
-        if (f.ownerAvatar != null) {
-            ImageView av = new ImageView(f.ownerAvatar);
-            av.setFitWidth(22);
-            av.setFitHeight(22);
-            ownerBox.getChildren().add(av);
-        }
-        Label owner = new Label(f.owner);
-        ownerBox.getChildren().add(owner);
-
-        // --- Size ---
-        Label size = new Label(f.size);
-
-        // --- Location ---
-        Label loc = new Label(f.location);
-        loc.getStyleClass().add("badge");
-        HBox locBox = new HBox(loc);
-        locBox.setAlignment(Pos.CENTER_LEFT);
-
-        // --- Star button ---
-        ImageView star = new ImageView(new Image(getClass().getResourceAsStream("/com/example/demo/imgs/bin.png")));
-        star.setFitWidth(18);
-        star.setFitHeight(18);
-        star.getStyleClass().add("star-icon");
-
-        // Khi click thì bỏ sao (hoặc xóa khỏi danh sách)
-        star.setOnMouseClicked(e -> {
-            fileListView.getItems().remove(f);
-            // TODO: thêm logic gọi API hoặc cập nhật backend nếu cần
         });
 
-        gp.add(nameBox, 0, 0);
-        gp.add(ownerBox, 1, 0);
-        gp.add(size, 2, 0);
-        gp.add(locBox, 3, 0);
-        gp.add(star, 4, 0); // thêm cột sao ở cuối
-
-        return gp;
+        loadTrashItems();
     }
 
+    public void loadTrashItems() {
+        // Clear danh sách cũ trước khi load để tránh duplicate nếu gọi nhiều lần
+        Platform.runLater(() -> trashList.clear());
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            // Lấy dữ liệu từ Server
+            List<TrashResponse> data = ClientApiHandler.getTrashItems();
+
+            Platform.runLater(() -> {
+                if (data != null) {
+                    trashList.setAll(data);
+                    trashListView.setItems(trashList);
+                }
+            });
+        });
+    }
+
+    // --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
+
+    private void handleRestore(Long id, boolean isFolder) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            boolean success = ClientApiHandler.restoreItem(id, isFolder);
+
+            Platform.runLater(() -> {
+                if (success) {
+                    showAlert("Thành công", "Đã khôi phục mục đã chọn.", Alert.AlertType.INFORMATION);
+                    loadTrashItems(); // Load lại danh sách
+                } else {
+                    showAlert("Lỗi", "Khôi phục thất bại.", Alert.AlertType.ERROR);
+                }
+            });
+        });
+    }
+
+    private void handleDeleteForever(Long trashId) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+                "Hành động này sẽ XÓA VĨNH VIỄN dữ liệu khỏi hệ thống.\nKhông thể hoàn tác. Bạn chắc chắn chứ?",
+                ButtonType.YES, ButtonType.NO);
+
+        alert.setTitle("Xóa vĩnh viễn");
+        alert.setHeaderText("Cảnh báo");
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.YES) {
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    // Gọi API xóa vĩnh viễn
+                    boolean success = ClientApiHandler.deleteForever(trashId);
+
+                    Platform.runLater(() -> {
+                        if (success) {
+                            loadTrashItems(); // Load lại danh sách ngay lập tức
+                            showAlert("Thành công", "Đã xóa vĩnh viễn.", Alert.AlertType.INFORMATION);
+                        } else {
+                            showAlert("Lỗi", "Không thể xóa. Vui lòng thử lại.", Alert.AlertType.ERROR);
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    private void showAlert(String title, String content, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    // --- INNER CLASS: Custom Cell (Giao diện từng dòng thùng rác) ---
+    private class TrashListCell extends ListCell<TrashResponse> {
+        @Override
+        protected void updateItem(TrashResponse item, boolean empty) {
+            super.updateItem(item, empty);
+
+            if (empty || item == null) {
+                setGraphic(null);
+                setText(null);
+            } else {
+                HBox hbox = new HBox(10);
+                hbox.setAlignment(Pos.CENTER_LEFT);
+                hbox.setStyle("-fx-padding: 10; -fx-border-color: #eee; -fx-border-width: 0 0 1 0;");
+
+                // 1. Icon
+                String iconType = item.isFolder ? "FOLDER" : "FILE";
+                // Dùng IconHelper để lấy icon, nếu null thì bỏ qua
+                ImageView icon = new ImageView(IconHelper.getFileIcon(iconType, item.itemName));
+                icon.setFitWidth(32);
+                icon.setFitHeight(32);
+
+                // 2. Thông tin (Tên + Size)
+                VBox infoBox = new VBox(2);
+                Label nameLbl = new Label(item.itemName);
+                nameLbl.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+
+                // ✅ FIX LỖI NULL POINTER TẠI ĐÂY
+                String sizeText;
+                if (item.isFolder) {
+                    sizeText = "Thư mục";
+                } else {
+                    // Kiểm tra null an toàn cho item.size
+                    long sizeVal = (item.size != null) ? item.size : 0L;
+                    if (sizeVal < 1024) {
+                        sizeText = sizeVal + " B";
+                    } else {
+                        sizeText = (sizeVal / 1024) + " KB";
+                    }
+                }
+
+                // Xử lý ngày xóa (tránh null)
+                String dateText = (item.deletedDate != null) ? item.deletedDate.toString() : "";
+
+                Label detailLbl = new Label(sizeText + " • Đã xóa: " + dateText);
+                detailLbl.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 12px;");
+
+                infoBox.getChildren().addAll(nameLbl, detailLbl);
+
+                // Spacer
+                Region spacer = new Region();
+                HBox.setHgrow(spacer, Priority.ALWAYS);
+
+                // 3. Các nút bấm
+                Button btnRestore = new Button("Khôi phục");
+                btnRestore.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-cursor: hand;");
+                btnRestore.setOnAction(e -> handleRestore(item.trashId, item.isFolder));
+
+                Button btnDelete = new Button("Xóa vĩnh viễn");
+                btnDelete.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;");
+                btnDelete.setOnAction(e -> handleDeleteForever(item.trashId));
+
+                hbox.getChildren().addAll(icon, infoBox, spacer, btnRestore, btnDelete);
+                setGraphic(hbox);
+            }
+        }
+    }
 }

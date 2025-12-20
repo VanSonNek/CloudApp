@@ -6,6 +6,7 @@ module com.example.demo {
     requires java.net.http;
     requires com.google.gson;
     requires java.desktop;
+    requires javafx.media;
 
     opens com.example.demo to javafx.fxml, com.google.gson;
     opens com.example.demo.controller to javafx.fxml, com.google.gson;

@@ -53,11 +53,11 @@
             <Region HBox.hgrow="ALWAYS"/>
 
             <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-padding: 0 15 0 0;">
-                
+
                 <MenuButton fx:id="btnNew"
                             alignment="CENTER"
                             text="+ New"
-                            style="-fx-background-color: #3EA9F0; -fx-text-fill: white; 
+                            style="-fx-background-color: #3EA9F0; -fx-text-fill: white;
                                    -fx-padding: 8 16; -fx-background-radius: 6; -fx-font-weight: bold;">
                     <items>
                         <MenuItem fx:id="menuNewFolder" text="New Folder"/>

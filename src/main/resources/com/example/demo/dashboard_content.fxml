@@ -4,9 +4,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-
 <?import javafx.scene.shape.Circle?>
+
 <VBox xmlns="http://javafx.com/javafx/17.0.12"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.example.demo.controller.DashboardController"
@@ -18,198 +17,85 @@
         <Insets top="0" bottom="20" left="0" right="0"/>
     </padding>
 
-    <!-- HEADER WRAPPER -->
     <HBox alignment="CENTER">
-        <HBox alignment="CENTER_LEFT"
-              prefWidth="995" maxWidth="1003"
-              prefHeight="70"
-              spacing="25"
-              style="-fx-background-color:#FFFFFF; -fx-background-radius:5;">
-            <padding>
-                <Insets top="15" bottom="15" left="15" right="25"/>
-            </padding>
-
+        <HBox alignment="CENTER_LEFT" prefWidth="995" maxWidth="1003" prefHeight="70" spacing="25" style="-fx-background-color:#FFFFFF; -fx-background-radius:5;">
+            <padding><Insets top="15" bottom="15" left="15" right="25"/></padding>
             <Region HBox.hgrow="ALWAYS"/>
-
-            <HBox prefWidth="740">
-                <TextField prefWidth="717" prefHeight="40"
-                           promptText="Search in Skybox"
-                           style="-fx-background-radius:10; -fx-padding:8;"/>
-            </HBox>
-
-            <ImageView fitWidth="20" fitHeight="20">
-                <image>
-                    <Image url="@imgs/bell.png"/>
-                </image>
-            </ImageView>
-
-            <ImageView fx:id="avatarBtn" fitHeight="25" fitWidth="25">
-                <image><Image url="@imgs/man.png"/></image>
-            </ImageView>
+            <TextField prefWidth="300" prefHeight="40" promptText="Search files..." style="-fx-background-radius:10; -fx-padding:8;"/>
+            <ImageView fx:id="avatarBtn" fitHeight="30" fitWidth="30" style="-fx-cursor: hand;"><image><Image url="@imgs/man.png"/></image></ImageView>
         </HBox>
     </HBox>
 
-    <!-- TOP CARDS -->
     <HBox alignment="TOP_CENTER" spacing="20">
 
-        <!-- Storage Card -->
-        <HBox fx:id="storageCard"
-              prefWidth="351" prefHeight="136"
-              spacing="20"
-              style="-fx-background-color:#FFD43B; -fx-background-radius:15;">
-            <padding>
-                <Insets top="20" bottom="20" left="20" right="20"/>
-            </padding>
-            <StackPane fx:id="storageCircle"/>
-            <VBox alignment="CENTER_LEFT" spacing="5">
-                <Label text="Storage" style="-fx-font-size:20px; -fx-font-weight:bold;"/>
-                <Label text="770.5 GB / 1000 GB" style="-fx-font-size:15px;"/>
-            </VBox>
+        <HBox fx:id="storageCard" prefWidth="351" prefHeight="136" spacing="20"
+              style="-fx-background-color:#FFD43B; -fx-background-radius:15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);">
+            <padding><Insets top="20" bottom="20" left="20" right="20"/></padding>
+
+            <StackPane fx:id="storageCircle"/> <VBox alignment="CENTER_LEFT" spacing="5">
+            <Label text="Storage" style="-fx-font-size:20px; -fx-font-weight:bold; -fx-text-fill: #333;"/>
+            <Label fx:id="lblTotalUsage" text="Checking..." style="-fx-font-size:15px; -fx-text-fill: #555;"/>
+        </VBox>
         </HBox>
 
-        <!-- Transfer Card -->
-        <HBox fx:id="transferCard"
-              prefWidth="350" prefHeight="136"
-              spacing="20"
-              style="-fx-background-color:#A78BFA; -fx-background-radius:15;">
-            <padding>
-                <Insets top="20" bottom="20" left="20" right="20"/>
-            </padding>
+        <HBox fx:id="transferCard" prefWidth="350" prefHeight="136" spacing="20"
+              style="-fx-background-color:#A78BFA; -fx-background-radius:15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);">
+            <padding><Insets top="20" bottom="20" left="20" right="20"/></padding>
+
             <StackPane fx:id="transferCircle"/>
+
             <VBox alignment="CENTER_LEFT" spacing="5">
-                <Label text="Transfer" style="-fx-font-size:20px; -fx-font-weight:bold;"/>
-                <Label text="100 GB / 1000 GB" style="-fx-font-size:15px;"/>
+                <Label text="Transfer" style="-fx-font-size:20px; -fx-font-weight:bold; -fx-text-fill: white;"/>
+                <Label fx:id="lblTransferUsage" text="Checking..." style="-fx-font-size:15px; -fx-text-fill: #EEE;"/>
             </VBox>
         </HBox>
-
     </HBox>
 
-    <!-- USED STORAGE CARD -->
     <HBox alignment="CENTER">
-        <VBox spacing="15"
-              prefWidth="721" maxWidth="765"
-              style="-fx-background-color: white; -fx-background-radius: 20;">
+        <VBox spacing="15" prefWidth="721" maxWidth="765" style="-fx-background-color: white; -fx-background-radius: 20; -fx-padding: 20 28 20 28;">
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Used Storage Breakdown" style="-fx-font-size: 18; -fx-font-weight: bold;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="Total Limit: 10 GB" style="-fx-text-fill: #888; -fx-font-weight: bold;"/>
+            </HBox>
 
-            <padding><Insets top="20" bottom="20" left="28" right="28"/></padding>
+            <HBox prefHeight="12" prefWidth="650" style="-fx-background-color: #F0F0F0; -fx-background-radius: 6;">
+                <Region fx:id="barActive" style="-fx-background-color: #3EA9F0; -fx-background-radius: 6 0 0 6;" prefWidth="0"/>
+                <Region fx:id="barTrash" style="-fx-background-color: #FF6257;" prefWidth="0"/>
+            </HBox>
 
-            <children>
-
-                <Label text="Used Storage"
-                       style="-fx-font-size: 18; -fx-font-weight: bold;"/>
-
-                <HBox spacing="0" prefWidth="650">
-
-                    <!-- CLOUD - LEFT -->
-                    <VBox spacing="5" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
-                        <HBox spacing="4">
-                            <Label text="6%" style="-fx-font-size: 17; -fx-font-weight: bold;"/>
-                            <Label text="(4.26GB)" style="-fx-text-fill: #888;"/>
-                        </HBox>
-                        <HBox spacing="4" alignment="CENTER_LEFT">
-                            <Circle radius="4" fill="#3A86FF"/>
-                            <Label text="Cloud drive" style="-fx-text-fill: #777;"/>
-                        </HBox>
+            <HBox spacing="25">
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Circle radius="5" fill="#3EA9F0"/>
+                    <VBox>
+                        <Label text="Active Files" style="-fx-font-weight: bold; -fx-font-size: 12;"/>
+                        <Label fx:id="lblActiveSize" text="0 B" style="-fx-text-fill: #777; -fx-font-size: 11;"/>
                     </VBox>
-
-                    <!-- TRASH - CENTER -->
-                    <VBox spacing="5" alignment="CENTER" HBox.hgrow="ALWAYS">
-                        <HBox spacing="4" alignment="CENTER">
-                            <Label text="9%" style="-fx-font-size: 17; -fx-font-weight: bold;"/>
-                            <Label text="(8.76GB)" style="-fx-text-fill: #888;"/>
-                        </HBox>
-                        <HBox spacing="4" alignment="CENTER">
-                            <Circle radius="4" fill="#FF4D6A"/>
-                            <Label text="Trash" style="-fx-text-fill: #777;"/>
-                        </HBox>
-                    </VBox>
-
-                    <!-- AVAILABLE - RIGHT -->
-                    <VBox spacing="5" alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
-                        <HBox spacing="4" alignment="CENTER_RIGHT">
-                            <Label text="20%" style="-fx-font-size: 17; -fx-font-weight: bold;"/>
-                            <Label text="(18.77GB)" style="-fx-text-fill: #888;"/>
-                        </HBox>
-                        <HBox spacing="4" alignment="CENTER_RIGHT">
-                            <Circle radius="4" fill="#E0E0E0"/>
-                            <Label text="Available" style="-fx-text-fill: #777;"/>
-                        </HBox>
-                    </VBox>
-
                 </HBox>
 
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Circle radius="5" fill="#FF6257"/>
+                    <VBox>
+                        <Label text="Trash" style="-fx-font-weight: bold; -fx-font-size: 12;"/>
+                        <Label fx:id="lblTrashSize" text="0 B" style="-fx-text-fill: #777; -fx-font-size: 11;"/>
+                    </VBox>
+                </HBox>
 
-                <ProgressBar prefWidth="650"
-                             progress="0.8"
-                             style="-fx-accent: #3A86FF;"/>
-
-            </children>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblAvailableText" text="Free: 10 GB" style="-fx-text-fill: #4CAF50; -fx-font-weight: bold;"/>
+            </HBox>
         </VBox>
     </HBox>
 
-
-    <!-- RECENT ADDED -->
     <HBox alignment="CENTER">
-        <VBox prefWidth="721" maxWidth="765"
-              spacing="15"
-              prefHeight="254"
-              style="-fx-background-color:#FFFFFF; -fx-background-radius:12;">
-            <padding>
-                <Insets top="20" bottom="20" left="20" right="20"/>
-            </padding>
-
-            <Label text="Recent Added" style="-fx-font-size:18px; -fx-font-weight:bold;"/>
-
-            <!-- File Project -->
-            <HBox spacing="15"
-                  style="-fx-background-color:#FFFFFF; -fx-border-color:rgba(0,0,0,0.1); -fx-border-width:1; -fx-background-radius:10;">
-                <padding>
-                    <Insets top="15" bottom="15" left="15" right="15"/>
-                </padding>
-                <ImageView fitWidth="24" fitHeight="24">
-                    <image>
-                        <Image url="@imgs/file.png"/>
-                    </image>
-                </ImageView>
-                <Label text="File Project"/>
-                <Pane HBox.hgrow="ALWAYS"/>
-                <Label text="600 MB"/>
-                <Label text="10/06/2022"/>
+        <VBox prefWidth="721" maxWidth="765" spacing="15" style="-fx-background-color:#FFFFFF; -fx-background-radius:12; -fx-padding: 20;">
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Recent Added" style="-fx-font-size:18px; -fx-font-weight:bold;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="View All" style="-fx-text-fill: #3EA9F0; -fx-cursor: hand;"/>
             </HBox>
 
-            <!-- New Folder -->
-            <HBox spacing="15"
-                  style="-fx-background-color:#FFFFFF; -fx-border-color:rgba(0,0,0,0.1); -fx-border-width:1; -fx-background-radius:10;">
-                <padding>
-                    <Insets top="15" bottom="15" left="15" right="15"/>
-                </padding>
-                <ImageView fitWidth="24" fitHeight="24">
-                    <image>
-                        <Image url="@imgs/file.png"/>
-                    </image>
-                </ImageView>
-                <Label text="New Folder"/>
-                <Pane HBox.hgrow="ALWAYS"/>
-                <Label text="2.3 GB"/>
-                <Label text="29/05/2022"/>
-            </HBox>
-
-            <!-- My Image -->
-            <HBox spacing="15"
-                  style="-fx-background-color:#FFFFFF; -fx-border-color:rgba(0,0,0,0.1); -fx-border-width:1; -fx-background-radius:10;">
-                <padding>
-                    <Insets top="15" bottom="15" left="15" right="15"/>
-                </padding>
-                <ImageView fitWidth="24" fitHeight="24">
-                    <image>
-                        <Image url="@imgs/file.png"/>
-                    </image>
-                </ImageView>
-                <Label text="My Image"/>
-                <Pane HBox.hgrow="ALWAYS"/>
-                <Label text="948 MB"/>
-                <Label text="26/05/2022"/>
-            </HBox>
-
+            <VBox fx:id="recentFileContainer" spacing="10"/>
         </VBox>
     </HBox>
 

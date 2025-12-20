@@ -1,161 +1,146 @@
 package com.example.demo.controller;
 
+import com.example.demo.ClientApiHandler;
+import com.example.demo.ClientApiHandler.ShareResponse;
+import com.example.demo.util.IconHelper;
+
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.image.Image;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.util.Callback;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.concurrent.Executors;
 
 public class ShareController {
 
     @FXML
-    private ListView<Object> fileListView;
+    private ListView<ShareResponse> shareListView;
 
-    // ----------- MODELS -----------
-    public static class Section {
-        String title;
-        public Section(String title) { this.title = title; }
-    }
+    private ObservableList<ShareResponse> shareList = FXCollections.observableArrayList();
 
-    public static class FileItem {
-        String name;
-        Image ownerAvatar;
-        String owner;
-        String size;
-        String location;
-
-        public FileItem(String name, Image ownerAvatar, String owner, String size, String location) {
-            this.name = name;
-            this.ownerAvatar = ownerAvatar;
-            this.owner = owner;
-            this.size = size;
-            this.location = location;
-        }
-    }
-
-    // ----------- INITIALIZE UI -----------
     @FXML
-    private void initialize() {
-        ObservableList<Object> items = FXCollections.observableArrayList();
-
-        // ========= DỮ LIỆU MẪU =========
-
-        items.add(new FileItem("File của Sơn",
-                load("/com/example/demo/imgs/man.png"), "Ahihi", "22/12/2025", "Gui file qua ne"));
-        items.add(new FileItem("File của Sơn",
-                load("/com/example/demo/imgs/man.png"), "Ahihi", "22/12/2025", "Gui file qua ne"));
-        items.add(new FileItem("File của Sơn",
-                load("/com/example/demo/imgs/man.png"), "Ahihi", "22/12/2025", "Gui file qua ne"));
-
-
-        fileListView.setItems(items);
-        fileListView.setCellFactory(list -> new MixedCell());
-
-        // ======= AUTO CHIỀU CAO =======
-        fileListView.setFixedCellSize(60);
-        fileListView.setPrefHeight(Region.USE_COMPUTED_SIZE);
-        fileListView.setMinHeight(Region.USE_PREF_SIZE);
-        fileListView.setMaxHeight(Double.MAX_VALUE); // cho phép mở rộng
-    }
-
-    // ----------- TOOL: LOAD ẢNH -----------
-    private Image load(String path) {
-        try {
-            return new Image(getClass().getResourceAsStream(path));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    // ----------- CELL RENDERER -----------
-    private class MixedCell extends ListCell<Object> {
-        @Override
-        protected void updateItem(Object obj, boolean empty) {
-            super.updateItem(obj, empty);
-            if (empty || obj == null) {
-                setGraphic(null);
-                return;
+    public void initialize() {
+        // Cấu hình giao diện cho từng dòng trong danh sách
+        shareListView.setCellFactory(new Callback<ListView<ShareResponse>, ListCell<ShareResponse>>() {
+            @Override
+            public ListCell<ShareResponse> call(ListView<ShareResponse> param) {
+                return new ShareListCell();
             }
-            if (obj instanceof Section) {
-                Label section = new Label(((Section) obj).title);
-                section.getStyleClass().add("section-header");
-                setGraphic(section);
-            } else {
-                FileItem f = (FileItem) obj;
-                setGraphic(buildRow(f));
-            }
-        }
-    }
-
-    // ----------- RENDER 1 ROW FILE -----------
-    private GridPane buildRow(FileItem f) {
-        GridPane gp = new GridPane();
-        gp.getStyleClass().add("row");
-        gp.setHgap(10);
-        gp.setAlignment(Pos.CENTER_LEFT);
-        gp.setPrefHeight(48);
-
-        ColumnConstraints c0 = new ColumnConstraints(530);
-        ColumnConstraints c1 = new ColumnConstraints(140);
-        ColumnConstraints c2 = new ColumnConstraints(100);
-        ColumnConstraints c3 = new ColumnConstraints(120);
-        ColumnConstraints c4 = new ColumnConstraints(40); // thêm cột sao
-        gp.getColumnConstraints().addAll(c0, c1, c2, c3, c4);
-
-        // --- Name ---
-        HBox nameBox = new HBox(10);
-        nameBox.setAlignment(Pos.CENTER_LEFT);
-        Label name = new Label(f.name);
-        name.getStyleClass().add("file-name");
-        nameBox.getChildren().add(name);
-
-        // --- Owner ---
-        HBox ownerBox = new HBox(8);
-        ownerBox.setAlignment(Pos.CENTER_LEFT);
-        if (f.ownerAvatar != null) {
-            ImageView av = new ImageView(f.ownerAvatar);
-            av.setFitWidth(22);
-            av.setFitHeight(22);
-            ownerBox.getChildren().add(av);
-        }
-        Label owner = new Label(f.owner);
-        ownerBox.getChildren().add(owner);
-
-        // --- Size ---
-        Label size = new Label(f.size);
-
-        // --- Location ---
-        Label loc = new Label(f.location);
-        loc.getStyleClass().add("badge");
-        HBox locBox = new HBox(loc);
-        locBox.setAlignment(Pos.CENTER_LEFT);
-
-        // --- Star button ---
-        ImageView star = new ImageView(new Image(getClass().getResourceAsStream("/com/example/demo/imgs/download.png")));
-        star.setFitWidth(18);
-        star.setFitHeight(18);
-        star.getStyleClass().add("star-icon");
-
-        // Khi click thì xóa khỏi danh sách
-        star.setOnMouseClicked(e -> {
-            fileListView.getItems().remove(f);
         });
 
-        gp.add(nameBox, 0, 0);
-        gp.add(ownerBox, 1, 0);
-        gp.add(size, 2, 0);
-        gp.add(locBox, 3, 0);
-        gp.add(star, 4, 0);
-
-        return gp;
+        loadSharedFiles();
     }
 
+    private void loadSharedFiles() {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            List<ShareResponse> data = ClientApiHandler.getSharedFiles();
+            Platform.runLater(() -> {
+                if (data != null) {
+                    shareList.setAll(data);
+                    shareListView.setItems(shareList);
+                }
+            });
+        });
+    }
+
+    // --- LOGIC DOWNLOAD FILE ĐƯỢC CHIA SẺ ---
+    private void handleDownload(ShareResponse item) {
+        if (item.isFolder) {
+            showAlert("Thông báo", "Hiện chưa hỗ trợ tải cả thư mục được chia sẻ.", Alert.AlertType.INFORMATION);
+            return;
+        }
+
+        FileChooser fc = new FileChooser();
+        fc.setInitialFileName(item.fileName);
+        fc.setTitle("Lưu file được chia sẻ");
+        File dest = fc.showSaveDialog(shareListView.getScene().getWindow());
+
+        if (dest != null) {
+            Executors.newSingleThreadExecutor().execute(() -> {
+                // Dùng fileId để tải
+                File temp = ClientApiHandler.downloadFileToTemp(item.fileId, item.fileName);
+
+                Platform.runLater(() -> {
+                    if (temp != null) {
+                        try {
+                            Files.copy(temp.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            showAlert("Thành công", "Đã tải file về máy.", Alert.AlertType.INFORMATION);
+                        } catch (Exception e) {
+                            showAlert("Lỗi", "Không thể lưu file: " + e.getMessage(), Alert.AlertType.ERROR);
+                        }
+                    } else {
+                        showAlert("Lỗi", "Tải file thất bại từ server.", Alert.AlertType.ERROR);
+                    }
+                });
+            });
+        }
+    }
+
+    private void showAlert(String title, String content, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    // --- INNER CLASS: Giao diện từng dòng (ListCell) ---
+    private class ShareListCell extends ListCell<ShareResponse> {
+        @Override
+        protected void updateItem(ShareResponse item, boolean empty) {
+            super.updateItem(item, empty);
+
+            if (empty || item == null) {
+                setGraphic(null);
+                setText(null);
+            } else {
+                HBox hbox = new HBox(10);
+                hbox.setAlignment(Pos.CENTER_LEFT);
+                hbox.setStyle("-fx-padding: 10; -fx-border-color: #eee; -fx-border-width: 0 0 1 0;");
+
+                // 1. Xử lý Icon & Loại item (Sửa lỗi itemType)
+                String typeStr = item.isFolder ? "FOLDER" : "FILE";
+                ImageView icon = new ImageView(IconHelper.getFileIcon(typeStr, item.fileName));
+                icon.setFitWidth(32);
+                icon.setFitHeight(32);
+
+                // 2. Thông tin (Sửa lỗi itemName, senderEmail)
+                VBox infoBox = new VBox(2);
+
+                // itemName -> item.fileName
+                Label nameLbl = new Label(item.fileName);
+                nameLbl.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+
+                // senderEmail -> item.ownerEmail
+                Label ownerLbl = new Label("Người gửi: " + item.ownerEmail + " • Ngày: " + item.sharedDate);
+                ownerLbl.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 12px;");
+
+                infoBox.getChildren().addAll(nameLbl, ownerLbl);
+
+                Region spacer = new Region();
+                HBox.setHgrow(spacer, Priority.ALWAYS);
+
+                // 3. Nút Download (Sửa lỗi itemId)
+                Button btnDownload = new Button("Tải xuống");
+                btnDownload.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-cursor: hand;");
+                btnDownload.setOnAction(e -> handleDownload(item));
+
+                hbox.getChildren().addAll(icon, infoBox, spacer, btnDownload);
+                setGraphic(hbox);
+            }
+        }
+    }
 }
