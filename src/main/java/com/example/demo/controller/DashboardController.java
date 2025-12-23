@@ -185,37 +185,50 @@ public class DashboardController {
 
     private void createCircularProgress(StackPane stackPane, double percent, Color color) {
         stackPane.getChildren().clear();
+        // Đặt kích thước cố định cho StackPane để tránh layout bị nhảy
         stackPane.setPrefSize(80, 80);
 
-        // Vòng tròn nền
-        Arc bgArc = new Arc(40, 40, 35, 35, 90, 360);
-        bgArc.setType(ArcType.OPEN);
-        bgArc.setStroke(Color.rgb(255,255,255,0.3));
-        bgArc.setStrokeWidth(8);
-        bgArc.setFill(Color.TRANSPARENT);
+        // 1. Tạo Group để chứa 2 vòng tròn
+        // Lưu ý: Dùng tọa độ (0,0) cho Arc để dễ căn chỉnh trong Group
 
-        // Vòng tròn tiến trình
-        Arc progArc = new Arc(40, 40, 35, 35, 90, 0);
+        // --- Vòng tròn nền ---
+        Arc bgArc = new Arc(0, 0, 35, 35, 90, 360);
+        bgArc.setType(ArcType.OPEN);
+        bgArc.setStroke(Color.rgb(255, 255, 255, 0.3));
+        bgArc.setStrokeWidth(8);
+        bgArc.setFill(Color.TRANSPARENT); // Quan trọng: Không tô màu nền
+
+        // --- Vòng tròn tiến trình ---
+        Arc progArc = new Arc(0, 0, 35, 35, 90, 0);
         progArc.setType(ArcType.OPEN);
         progArc.setStroke(color);
         progArc.setStrokeWidth(8);
-        progArc.setFill(Color.TRANSPARENT);
-        progArc.setStrokeLineCap(StrokeLineCap.ROUND);
+        progArc.setStrokeLineCap(StrokeLineCap.ROUND); // Bo tròn 2 đầu cho đẹp
+        progArc.setFill(Color.TRANSPARENT); // Quan trọng: Không tô màu nền
 
-        Label lbl = new Label((int)percent + "%");
+        // 2. Nhóm chúng lại vào Group
+        // Group sẽ lấy kích thước theo phần tử lớn nhất (bgArc), giúp vị trí cố định
+        javafx.scene.Group circleGroup = new javafx.scene.Group(bgArc, progArc);
+
+        // 3. Label phần trăm
+        Label lbl = new Label((int) percent + "%");
         lbl.setTextFill(color);
         lbl.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
-        stackPane.getChildren().addAll(bgArc, progArc, lbl);
+        // Thêm Group và Label vào StackPane
+        // StackPane sẽ tự động căn giữa Group và Label đè lên nhau
+        stackPane.getChildren().addAll(circleGroup, lbl);
 
+        // 4. Animation
         Timeline timeline = new Timeline(
                 new KeyFrame(Duration.ZERO, e -> {
                     progArc.setLength(0);
                     lbl.setText("0%");
                 }),
                 new KeyFrame(Duration.seconds(1), e -> {
+                    // Giá trị âm để chạy theo chiều kim đồng hồ
                     progArc.setLength(-(percent * 3.6));
-                    lbl.setText((int)percent + "%");
+                    lbl.setText((int) percent + "%");
                 })
         );
         timeline.play();
