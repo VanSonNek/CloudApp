@@ -1,159 +1,138 @@
 package com.example.demo.controller;
 
+import com.example.demo.ClientApiHandler;
+import com.example.demo.ListItem;
+import com.example.demo.util.IconHelper;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.image.Image;
+import javafx.scene.control.*; // Đã bao gồm TextField
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
+
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors; // Cần thêm thư viện này để lọc
 
 public class StarredController {
 
-    @FXML
-    private ListView<Object> fileListView;
+    @FXML private ListView<ListItem.FileDto> fileListView;
 
-    public static class Section {
-        String title;
-        public Section(String title) { this.title = title; }
-    }
+    // 1. [MỚI] Khai báo ô tìm kiếm (khớp với fx:id bên FXML)
+    @FXML private TextField searchField;
 
-    public static class FileItem {
-        String name;
-        Image ownerAvatar;
-        String owner;
-        String size;
-        String location;
-
-        public FileItem(String name, Image ownerAvatar, String owner, String size, String location) {
-            this.name = name;
-            this.ownerAvatar = ownerAvatar;
-            this.owner = owner;
-            this.size = size;
-            this.location = location;
-        }
-    }
+    // 2. [MỚI] Danh sách gốc để lưu trữ dữ liệu tải từ server
+    private ObservableList<ListItem.FileDto> masterData = FXCollections.observableArrayList();
 
     @FXML
-    private void initialize() {
-        ObservableList<Object> items = FXCollections.observableArrayList();
+    public void initialize() {
+        // Cấu hình hiển thị Cell
+        fileListView.setCellFactory(param -> new StarredFileCell());
 
-        // ========= DỮ LIỆU MẪU =========
-        items.add(new Section("Today"));
-        items.add(new FileItem("File của Sơn",
-                load("/com/example/demo/imgs/man.png"), "Ahihi", "2MB", "Ahuhu"));
-        items.add(new FileItem("File của Sơn",
-                load("/com/example/demo/imgs/man.png"), "Ahihi", "2MB", "Ahuhu"));
-        items.add(new FileItem("File của Sơn",
-                load("/com/example/demo/imgs/man.png"), "Ahihi", "2MB", "Ahuhu"));
+        // 3. [MỚI] Lắng nghe sự kiện gõ phím để lọc danh sách ngay lập tức
+        if (searchField != null) {
+            searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+                filterList(newValue);
+            });
+        }
 
-        items.add(new Section("Earlier this week"));
-        items.add(new FileItem("File của Sơn",
-                load("/com/example/demo/imgs/man.png"), "Ahihi", "2MB", "Ahuhu"));
-        fileListView.setItems(items);
-        fileListView.setCellFactory(list -> new MixedCell());
-
-        // ======= AUTO CHIỀU CAO =======
-        fileListView.setFixedCellSize(60);
-        fileListView.setPrefHeight(Region.USE_COMPUTED_SIZE);
-        fileListView.setMinHeight(Region.USE_PREF_SIZE);
-        fileListView.setMaxHeight(Double.MAX_VALUE); // cho phép mở rộng
+        loadData();
     }
 
-    private Image load(String path) {
-        try {
-            return new Image(getClass().getResourceAsStream(path));
-        } catch (Exception e) {
-            return null;
-        }
-    }
+    private void loadData() {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            // Lấy dữ liệu từ Server
+            List<ListItem.FileDto> files = ClientApiHandler.getStarredFiles();
 
-    private class MixedCell extends ListCell<Object> {
-        @Override
-        protected void updateItem(Object obj, boolean empty) {
-            super.updateItem(obj, empty);
-            if (empty || obj == null) {
-                setGraphic(null);
-                return;
-            }
-            if (obj instanceof Section) {
-                Label section = new Label(((Section) obj).title);
-                section.getStyleClass().add("section-header");
-                setGraphic(section);
-            } else {
-                FileItem f = (FileItem) obj;
-                setGraphic(buildRow(f));
-            }
-        }
-    }
-
-    private GridPane buildRow(FileItem f) {
-        GridPane gp = new GridPane();
-        gp.getStyleClass().add("row");
-        gp.setHgap(10);
-        gp.setAlignment(Pos.CENTER_LEFT);
-        gp.setPrefHeight(48);
-
-        ColumnConstraints c0 = new ColumnConstraints(530);
-        ColumnConstraints c1 = new ColumnConstraints(140);
-        ColumnConstraints c2 = new ColumnConstraints(100);
-        ColumnConstraints c3 = new ColumnConstraints(120);
-        ColumnConstraints c4 = new ColumnConstraints(40); // thêm cột sao
-        gp.getColumnConstraints().addAll(c0, c1, c2, c3, c4);
-
-        // --- Name ---
-        HBox nameBox = new HBox(10);
-        nameBox.setAlignment(Pos.CENTER_LEFT);
-        Label name = new Label(f.name);
-        name.getStyleClass().add("file-name");
-        nameBox.getChildren().add(name);
-
-        // --- Owner ---
-        HBox ownerBox = new HBox(8);
-        ownerBox.setAlignment(Pos.CENTER_LEFT);
-        if (f.ownerAvatar != null) {
-            ImageView av = new ImageView(f.ownerAvatar);
-            av.setFitWidth(22);
-            av.setFitHeight(22);
-            ownerBox.getChildren().add(av);
-        }
-        Label owner = new Label(f.owner);
-        ownerBox.getChildren().add(owner);
-
-        // --- Size ---
-        Label size = new Label(f.size);
-
-        // --- Location ---
-        Label loc = new Label(f.location);
-        loc.getStyleClass().add("badge");
-        HBox locBox = new HBox(loc);
-        locBox.setAlignment(Pos.CENTER_LEFT);
-
-        // --- Star button ---
-        ImageView star = new ImageView(new Image(getClass().getResourceAsStream("/com/example/demo/imgs/star2.png")));
-        star.setFitWidth(18);
-        star.setFitHeight(18);
-        star.getStyleClass().add("star-icon");
-
-        // Khi click thì bỏ sao (hoặc xóa khỏi danh sách)
-        star.setOnMouseClicked(e -> {
-            fileListView.getItems().remove(f);
-            // TODO: thêm logic gọi API hoặc cập nhật backend nếu cần
+            Platform.runLater(() -> {
+                if (files != null) {
+                    // 4. [QUAN TRỌNG] Lưu vào danh sách gốc trước
+                    masterData.setAll(files);
+                    // Hiển thị ra màn hình
+                    fileListView.setItems(masterData);
+                }
+            });
         });
-
-        gp.add(nameBox, 0, 0);
-        gp.add(ownerBox, 1, 0);
-        gp.add(size, 2, 0);
-        gp.add(locBox, 3, 0);
-        gp.add(star, 4, 0); // thêm cột sao ở cuối
-
-        return gp;
     }
 
+    // 5. [MỚI] Hàm xử lý logic tìm kiếm
+    private void filterList(String keyword) {
+        if (keyword == null || keyword.isEmpty()) {
+            // Nếu ô tìm kiếm trống -> Hiện lại toàn bộ từ danh sách gốc
+            fileListView.setItems(masterData);
+        } else {
+            // Lọc theo tên file (không phân biệt hoa thường)
+            String lowerCaseFilter = keyword.toLowerCase();
+            List<ListItem.FileDto> filteredList = masterData.stream()
+                    .filter(file -> file.originalFilename.toLowerCase().contains(lowerCaseFilter))
+                    .collect(Collectors.toList());
+
+            // Cập nhật giao diện với danh sách đã lọc
+            fileListView.setItems(FXCollections.observableArrayList(filteredList));
+        }
+    }
+
+    // Class nội bộ để hiển thị giao diện từng dòng (Giữ nguyên logic cũ)
+    private class StarredFileCell extends ListCell<ListItem.FileDto> {
+        @Override
+        protected void updateItem(ListItem.FileDto item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty || item == null) {
+                setGraphic(null);
+            } else {
+                GridPane grid = new GridPane();
+                grid.setHgap(10);
+                grid.setAlignment(Pos.CENTER_LEFT);
+
+                // Cột 1: Icon + Tên
+                HBox nameBox = new HBox(10);
+                nameBox.setAlignment(Pos.CENTER_LEFT);
+                ImageView icon = new ImageView(IconHelper.getFileIcon("FILE", item.originalFilename));
+                icon.setFitWidth(24); icon.setFitHeight(24);
+                Label nameLabel = new Label(item.originalFilename);
+                nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+                nameBox.getChildren().addAll(icon, nameLabel);
+
+                // Cột 2: Người sở hữu (Mockup)
+                Label ownerLabel = new Label("Me");
+
+                // Cột 3: Kích thước
+                String sizeStr = (item.size != null) ? (item.size / 1024) + " KB" : "0 KB";
+                Label sizeLabel = new Label(sizeStr);
+
+                // Cột 4: Nút Star (Bỏ thích)
+                ToggleButton btnStar = new ToggleButton("★");
+                btnStar.setSelected(true);
+                btnStar.setStyle("-fx-background-color: transparent; -fx-text-fill: #f1c40f; -fx-font-size: 16px; -fx-cursor: hand;");
+
+                btnStar.setOnAction(e -> {
+                    // [QUAN TRỌNG] Xóa khỏi cả 2 danh sách để đồng bộ
+                    getListView().getItems().remove(item);
+                    masterData.remove(item);
+
+                    Executors.newSingleThreadExecutor().execute(() -> {
+                        ClientApiHandler.toggleStar(item.id, false, false);
+                    });
+                });
+
+                grid.getColumnConstraints().addAll(
+                        new ColumnConstraints(550),
+                        new ColumnConstraints(140),
+                        new ColumnConstraints(100),
+                        new ColumnConstraints(120)
+                );
+
+                grid.add(nameBox, 0, 0);
+                grid.add(ownerLabel, 1, 0);
+                grid.add(sizeLabel, 2, 0);
+                grid.add(btnStar, 3, 0);
+
+                setGraphic(grid);
+            }
+        }
+    }
 }

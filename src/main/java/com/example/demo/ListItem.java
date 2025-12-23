@@ -24,10 +24,33 @@ public class ListItem {
 
     public static class FileDto {
         public Long id;
-        public String originalFilename; // Tên hiển thị
-        public Long size; // Kích thước bằng bytes
-        public String uploadDate; 
-        public Long directoryId; 
+        public String originalFilename;
+        public String storedFilename;
+        public String type; // Ví dụ: "image/png", "application/pdf"
+        public Long size;   // Kích thước tính bằng byte
+        public String uploadDate;
+        public Long folderId;
+        public String ownerName; // Tên người sở hữu (để hiện ở cột Owner)
+
+        // Trạng thái
+        public boolean inTrash;   // Đang ở thùng rác hay không
+        public boolean isStarred; // Đã yêu thích hay chưa (New)
+
+        // Constructor mặc định (cần thiết cho thư viện Gson/Jackson)
+        public FileDto() {}
+
+        // Constructor tiện ích (nếu cần test nhanh)
+        public FileDto(Long id, String originalFilename, Long size, boolean isStarred) {
+            this.id = id;
+            this.originalFilename = originalFilename;
+            this.size = size;
+            this.isStarred = isStarred;
+        }
+
+        @Override
+        public String toString() {
+            return originalFilename; // Để hiển thị tên khi debug hoặc cho vào ListView đơn giản
+        }
     }
     // ------------------------------------------
     

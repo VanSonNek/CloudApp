@@ -16,7 +16,6 @@
         <Insets top="0" right="0" bottom="20" left="10"/>
     </padding>
 
-    <!-- ================= HEADER ================= -->
     <HBox alignment="CENTER">
         <HBox alignment="CENTER_LEFT"
               prefHeight="70.0" prefWidth="1000.0"
@@ -29,8 +28,9 @@
             <Region HBox.hgrow="ALWAYS"/>
 
             <HBox prefWidth="800">
-                <TextField prefHeight="40" prefWidth="750.0"
-                           promptText="Search in Skybox"
+                <TextField fx:id="searchField"
+                           prefHeight="40" prefWidth="750.0"
+                           promptText="Search"
                            style="-fx-background-radius: 10; -fx-padding: 8;"/>
             </HBox>
 
@@ -52,14 +52,20 @@
                 <Insets bottom="15" left="1" right="25" top="0"/>
             </padding>
 
-            <!-- Tiêu đề -->
+            <Button fx:id="btnBack"
+                    text="⬅ Back"
+                    disable="true"
+                    style="-fx-background-color: transparent;
+                           -fx-text-fill: #5f6368;
+                           -fx-font-weight: bold;
+                           -fx-font-size: 14px;
+                           -fx-cursor: hand;"/>
+
             <Label text="Share"
                    style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
 
-            <!-- Đẩy nút sang phải -->
             <Region HBox.hgrow="ALWAYS"/>
 
-            <!-- Nút Sắp xếp theo ngày -->
             <Button text="Sort by Date"
                     fx:id="sortByDateBtn"
                     style="-fx-background-color: #4285f4;
@@ -69,23 +75,16 @@
         </HBox>
     </HBox>
 
-
-
-    <!-- GẠCH NGANG PHÂN CÁCH -->
     <Separator prefWidth="1000">
         <style>
             -fx-background-color: #D0D0D0;
         </style>
     </Separator>
 
-    <!-- ================= BẢNG DỮ LIỆU ================= -->
-    <HBox alignment="CENTER">
-        <VBox alignment="CENTER" prefWidth="1000" spacing="15">
+    <HBox alignment="CENTER" VBox.vgrow="ALWAYS">
+        <VBox alignment="CENTER" prefWidth="1000" spacing="15" VBox.vgrow="ALWAYS">
 
-            <!-- HEADER CỘT -->
-            <GridPane prefWidth="1000"
-                      styleClass="table-header"
-                      style="-fx-background-color: #FFFFFF;">
+            <GridPane prefWidth="1000" styleClass="table-header" style="-fx-background-color: #FFFFFF;">
                 <columnConstraints>
                     <ColumnConstraints prefWidth="550"/>
                     <ColumnConstraints prefWidth="140"/>
@@ -93,18 +92,21 @@
                     <ColumnConstraints prefWidth="120"/>
                 </columnConstraints>
 
+                <padding>
+                    <Insets top="10" bottom="10" left="10" right="10"/>
+                </padding>
+
                 <Label styleClass="th" text="Name"/>
                 <Label styleClass="th" text="Sharer" GridPane.columnIndex="1"/>
                 <Label styleClass="th" text="Sharing day" GridPane.columnIndex="2"/>
-                <Label styleClass="th" text="Message" GridPane.columnIndex="3"/>
+                <Label styleClass="th" text="Type" GridPane.columnIndex="3"/>
             </GridPane>
 
-            <!-- DANH SÁCH FILE -->
-            <ListView fx:id="fileListView"
+            <ListView fx:id="shareListView"
                       prefWidth="1000"
                       styleClass="flat-list"
                       focusTraversable="false"
-                      VBox.vgrow="NEVER"/>
+                      VBox.vgrow="ALWAYS"/>
         </VBox>
     </HBox>
 </VBox>

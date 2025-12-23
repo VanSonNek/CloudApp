@@ -74,9 +74,6 @@
                     <ColumnConstraints prefWidth="550"/> <ColumnConstraints prefWidth="140"/> <ColumnConstraints prefWidth="100"/> <ColumnConstraints prefWidth="120"/> </columnConstraints>
 
                 <Label text="Name" style="-fx-font-weight: bold; -fx-padding: 0 0 0 10;"/>
-                <Label text="Owner" style="-fx-font-weight: bold;" GridPane.columnIndex="1"/>
-                <Label text="File Size" style="-fx-font-weight: bold;" GridPane.columnIndex="2"/>
-                <Label text="Deletion date" style="-fx-font-weight: bold;" GridPane.columnIndex="3"/>
             </GridPane>
 
             <ListView fx:id="trashListView"

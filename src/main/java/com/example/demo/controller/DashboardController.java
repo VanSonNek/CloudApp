@@ -12,7 +12,9 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -21,80 +23,218 @@ import javafx.scene.shape.ArcType;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.util.Duration;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class DashboardController {
 
     // ================== CẤU HÌNH ==================
     private static final long MAX_STORAGE = 10L * 1024 * 1024 * 1024; // 10 GB
-    private static final long MAX_DAILY_TRANSFER = 5L * 1024 * 1024 * 1024; // 5 GB (Limit upload/ngày)
+    private static final long MAX_DAILY_TRANSFER = 5L * 1024 * 1024 * 1024; // 5 GB
 
     @FXML private StackPane storageCircle;
     @FXML private StackPane transferCircle;
     @FXML private ImageView avatarBtn;
+
+    // Container hiển thị file (Dùng VBox thay vì ListView để giữ giao diện đẹp)
     @FXML private VBox recentFileContainer;
 
-    // Các biến hiển thị số liệu
     @FXML private Label lblTotalUsage;
     @FXML private Label lblTransferUsage;
-
-    // Các biến cho thanh 3 màu (Active - Trash - Free)
     @FXML private Region barActive;
     @FXML private Region barTrash;
     @FXML private Label lblActiveSize;
     @FXML private Label lblTrashSize;
     @FXML private Label lblAvailableText;
 
+    // Ô tìm kiếm
+    @FXML private TextField searchField;
+
+    // Các nút lọc
+    @FXML private Button btnAll, btnDoc, btnImg, btnMedia, btnOther;
+
+    // Danh sách gốc chứa dữ liệu tải về
+    private List<ListItem.FileDto> masterFileList = new ArrayList<>();
+
+    // Biến lưu trạng thái lọc hiện tại (mặc định là ALL)
+    private String currentFilterType = "ALL";
+
     @FXML
     public void initialize() {
-        // 1. Tải số liệu Dashboard
+        // 1. Tải số liệu biểu đồ
         loadDashboardData();
 
-        // 2. Tải danh sách file gần đây
+        // 2. Cài đặt sự kiện cho các nút lọc
+        setupFilterButtons();
+
+        // 3. Tải danh sách file
         loadRecentFiles();
+
+        // 4. [SỬA LẠI] Sự kiện tìm kiếm: Kết hợp cả Tìm kiếm + Bộ lọc đang chọn
+        if (searchField != null) {
+            searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+                // Khi gõ phím, gọi lại hàm hiển thị với từ khóa mới
+                refreshFileList(currentFilterType, newValue);
+            });
+        }
     }
+
+    // ================== LOGIC TẢI & HIỂN THỊ FILE ==================
+
+    private void loadRecentFiles() {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                // Tải file từ server
+                List<ListItem.FileDto> files = ClientApiHandler.getRecentFiles();
+
+                Platform.runLater(() -> {
+                    if (files != null) {
+                        this.masterFileList = files; // Lưu vào kho gốc
+
+                        // Mặc định hiển thị tab ALL và từ khóa rỗng
+                        if (btnAll != null) applyFilter("ALL", btnAll);
+                    }
+                });
+            } catch (Exception e) { e.printStackTrace(); }
+        });
+    }
+
+    private void setupFilterButtons() {
+        if (btnAll != null) btnAll.setOnAction(e -> applyFilter("ALL", btnAll));
+        if (btnDoc != null) btnDoc.setOnAction(e -> applyFilter("DOC", btnDoc));
+        if (btnImg != null) btnImg.setOnAction(e -> applyFilter("IMG", btnImg));
+        if (btnMedia != null) btnMedia.setOnAction(e -> applyFilter("MEDIA", btnMedia));
+        if (btnOther != null) btnOther.setOnAction(e -> applyFilter("OTHER", btnOther));
+    }
+
+    // Hàm xử lý khi bấm nút lọc (All, Doc...)
+    private void applyFilter(String type, Button activeBtn) {
+        this.currentFilterType = type; // Lưu lại loại đang chọn
+        updateButtonStyle(activeBtn);  // Đổi màu nút
+
+        // Lấy từ khóa hiện tại trong ô tìm kiếm (nếu có)
+        String keyword = (searchField != null) ? searchField.getText() : "";
+
+        // Gọi hàm refresh
+        refreshFileList(type, keyword);
+    }
+
+    // [QUAN TRỌNG] Hàm trung tâm: Lọc theo LOẠI FILE + TỪ KHÓA TÌM KIẾM
+    private void refreshFileList(String type, String keyword) {
+        recentFileContainer.getChildren().clear();
+
+        String lowerKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
+
+        // 1. Lọc dữ liệu từ masterFileList
+        List<ListItem.FileDto> filesToShow = masterFileList.stream()
+                // Điều kiện 1: Phải đúng loại (Doc, Img...) hoặc là ALL
+                .filter(f -> "ALL".equals(type) || checkType(f.originalFilename, type))
+                // Điều kiện 2: Tên file phải chứa từ khóa tìm kiếm
+                .filter(f -> f.originalFilename.toLowerCase().contains(lowerKeyword))
+                .collect(Collectors.toList());
+
+        // 2. Hiển thị ra màn hình
+        if (filesToShow.isEmpty()) {
+            Label emptyLbl = new Label("Không tìm thấy file phù hợp.");
+            emptyLbl.setStyle("-fx-text-fill: #999; -fx-padding: 20; -fx-font-style: italic;");
+            recentFileContainer.getChildren().add(emptyLbl);
+        } else {
+            for (ListItem.FileDto f : filesToShow) {
+                // Tái sử dụng hàm tạo giao diện dòng đẹp mắt của bạn
+                recentFileContainer.getChildren().add(createFileRow(f));
+            }
+        }
+    }
+
+    // ... (Giữ nguyên các hàm checkType, updateButtonStyle, createFileRow) ...
+    // ... Copy lại y nguyên các hàm logic cũ ở dưới đây ...
+
+    private boolean checkType(String filename, String type) {
+        if (filename == null) return false;
+        String name = filename.toLowerCase();
+        switch (type) {
+            case "DOC":
+                return name.endsWith(".doc") || name.endsWith(".docx") ||
+                        name.endsWith(".pdf") || name.endsWith(".txt") ||
+                        name.endsWith(".xls") || name.endsWith(".xlsx") ||
+                        name.endsWith(".ppt") || name.endsWith(".pptx");
+            case "IMG":
+                return name.endsWith(".png") || name.endsWith(".jpg") ||
+                        name.endsWith(".jpeg") || name.endsWith(".gif");
+            case "MEDIA":
+                return name.endsWith(".mp4") || name.endsWith(".mp3") ||
+                        name.endsWith(".avi") || name.endsWith(".mkv") || name.endsWith(".wav");
+            case "OTHER":
+                return !checkType(filename, "DOC") && !checkType(filename, "IMG") && !checkType(filename, "MEDIA");
+            default: return false;
+        }
+    }
+
+    private void updateButtonStyle(Button activeBtn) {
+        String defaultStyle = "-fx-background-color: #F0F2F5; -fx-text-fill: #666; -fx-background-radius: 20; -fx-cursor: hand;";
+        String activeStyle = "-fx-background-color: #E7F3FF; -fx-text-fill: #2196F3; -fx-background-radius: 20; -fx-cursor: hand; -fx-font-weight: bold;";
+        if (btnAll != null) btnAll.setStyle(defaultStyle);
+        if (btnDoc != null) btnDoc.setStyle(defaultStyle);
+        if (btnImg != null) btnImg.setStyle(defaultStyle);
+        if (btnMedia != null) btnMedia.setStyle(defaultStyle);
+        if (btnOther != null) btnOther.setStyle(defaultStyle);
+        if (activeBtn != null) activeBtn.setStyle(activeStyle);
+    }
+
+    private HBox createFileRow(ListItem.FileDto file) {
+        HBox row = new HBox(15);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setStyle("-fx-background-color:#FFFFFF; -fx-border-color:rgba(0,0,0,0.05); -fx-border-width:0 0 1 0;");
+        row.setPadding(new Insets(12, 10, 12, 10));
+        row.setCursor(Cursor.HAND);
+
+        ImageView icon = new ImageView(IconHelper.getFileIcon("FILE", file.originalFilename));
+        icon.setFitWidth(28); icon.setFitHeight(28);
+
+        Label nameLabel = new Label(file.originalFilename);
+        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #333;");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Label sizeLabel = new Label(formatSize(file.size));
+        sizeLabel.setStyle("-fx-text-fill: #999; -fx-font-size: 12px;");
+        sizeLabel.setPrefWidth(80);
+        sizeLabel.setAlignment(Pos.CENTER_RIGHT);
+
+        row.getChildren().addAll(icon, nameLabel, spacer, sizeLabel);
+
+        // Hover Effect
+        row.setOnMouseEntered(e -> row.setStyle("-fx-background-color:#F9FAFB; -fx-border-color:rgba(0,0,0,0.05); -fx-border-width:0 0 1 0;"));
+        row.setOnMouseExited(e -> row.setStyle("-fx-background-color:#FFFFFF; -fx-border-color:rgba(0,0,0,0.05); -fx-border-width:0 0 1 0;"));
+
+        return row;
+    }
+
+    // ================== LOGIC DASHBOARD BIỂU ĐỒ (Giữ nguyên) ==================
 
     private void loadDashboardData() {
         Executors.newSingleThreadExecutor().execute(() -> {
-            // Lấy dữ liệu từ Server
             DashboardMetrics metrics = ClientApiHandler.getDashboardMetrics();
-
             Platform.runLater(() -> {
-                // ✅ FIX 1: Kiểm tra null nếu không gọi được API
-                if (metrics == null) {
-                    System.out.println("Không lấy được dữ liệu Metrics.");
-                    return;
-                }
-
-                // Lấy giá trị an toàn
+                if (metrics == null) return;
                 long active = (metrics.activeSize != null) ? metrics.activeSize : 0;
                 long trash = (metrics.trashSize != null) ? metrics.trashSize : 0;
                 long transfer = (metrics.transferToday != null) ? metrics.transferToday : 0;
-
                 double totalUsed = active + trash;
+                double available = Math.max(0, MAX_STORAGE - totalUsed);
 
-                double available = MAX_STORAGE - totalUsed;
-                if (available < 0) available = 0;
-
-                // --- A. CẬP NHẬT CARD STORAGE (Màu Vàng) ---
-                double percentStorage = (double) totalUsed / MAX_STORAGE * 100;System.out.println(percentStorage);
-                if (percentStorage > 100) percentStorage = 100; // Cap max 100%
-
-                createCircularProgress(storageCircle, percentStorage, Color.WHITE);
+                double percentStorage = Math.min(100, (double) totalUsed / MAX_STORAGE * 100);
+                createCircularProgress(storageCircle, percentStorage, Color.web("#333333"));
                 lblTotalUsage.setText(formatSize((long) totalUsed) + " / 10 GB");
 
-                // --- B. CẬP NHẬT CARD TRANSFER (Màu Tím) ---
-                double percentTransfer = (double) transfer / MAX_DAILY_TRANSFER * 100;
-                if (percentTransfer > 100) percentTransfer = 100;
-
+                double percentTransfer = Math.min(100, (double) transfer / MAX_DAILY_TRANSFER * 100);
                 createCircularProgress(transferCircle, percentTransfer, Color.WHITE);
                 lblTransferUsage.setText(formatSize(transfer) + " Uploaded");
 
-                // --- C. CẬP NHẬT THANH 3 MÀU ---
                 updateStorageBar(active, trash);
-
-                // Cập nhật text chi tiết
                 lblActiveSize.setText(formatSize(active));
                 lblTrashSize.setText(formatSize(trash));
                 lblAvailableText.setText("Free: " + formatSize((long) available));
@@ -103,77 +243,20 @@ public class DashboardController {
     }
 
     private void updateStorageBar(long active, long trash) {
-        // Tổng chiều rộng thanh bar là 650px (theo FXML)
         double totalWidth = 650.0;
-
         double widthActive = (double) active / MAX_STORAGE * totalWidth;
         double widthTrash = (double) trash / MAX_STORAGE * totalWidth;
-
-        // ✅ FIX 2: Nếu file có nhưng quá nhỏ (<2px), hiển thị tối thiểu 2px để người dùng thấy
         if (active > 0 && widthActive < 2) widthActive = 2;
         if (trash > 0 && widthTrash < 2) widthTrash = 2;
 
-        // Giới hạn không cho tràn thanh nếu vượt quá 10GB
-        if (widthActive + widthTrash > totalWidth) {
-            double scale = totalWidth / (widthActive + widthTrash);
+        double sum = widthActive + widthTrash;
+        if (sum > totalWidth) {
+            double scale = totalWidth / sum;
             widthActive *= scale;
             widthTrash *= scale;
         }
-
         barActive.setPrefWidth(widthActive);
         barTrash.setPrefWidth(widthTrash);
-    }
-
-    private void loadRecentFiles() {
-        Executors.newSingleThreadExecutor().execute(() -> {
-            try {
-                List<ListItem.FileDto> files = ClientApiHandler.getRecentFiles();
-                Platform.runLater(() -> {
-                    recentFileContainer.getChildren().clear();
-                    // ✅ FIX 3: Check null trước khi check isEmpty
-                    if (files == null || files.isEmpty()) {
-                        Label emptyLbl = new Label("Chưa có file nào.");
-                        emptyLbl.setStyle("-fx-text-fill: #888; -fx-padding: 10;");
-                        recentFileContainer.getChildren().add(emptyLbl);
-                    } else {
-                        for (ListItem.FileDto f : files) {
-                            recentFileContainer.getChildren().add(createFileRow(f));
-                        }
-                    }
-                });
-            } catch (Exception e) { e.printStackTrace(); }
-        });
-    }
-
-    private HBox createFileRow(ListItem.FileDto file) {
-        HBox row = new HBox(15);
-        row.setAlignment(Pos.CENTER_LEFT);
-        row.setStyle("-fx-background-color:#FFFFFF; -fx-border-color:rgba(0,0,0,0.1); -fx-border-width:1; -fx-background-radius:10;");
-        row.setPadding(new Insets(15, 15, 15, 15));
-        row.setCursor(Cursor.HAND); // ✅ Thêm con trỏ tay
-
-        ImageView icon = new ImageView(IconHelper.getFileIcon("FILE", file.originalFilename));
-        icon.setFitWidth(24); icon.setFitHeight(24);
-
-        Label nameLabel = new Label(file.originalFilename);
-        nameLabel.setStyle("-fx-font-weight: bold;");
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        Label sizeLabel = new Label(formatSize(file.size));
-        sizeLabel.setPrefWidth(80);
-
-        row.getChildren().addAll(icon, nameLabel, spacer, sizeLabel);
-
-        // ✅ Thêm hiệu ứng Hover cho đẹp
-        row.setOnMouseEntered(e -> row.setStyle("-fx-background-color:#F0F8FF; -fx-border-color:#2196F3; -fx-border-width:1; -fx-background-radius:10;"));
-        row.setOnMouseExited(e -> row.setStyle("-fx-background-color:#FFFFFF; -fx-border-color:rgba(0,0,0,0.1); -fx-border-width:1; -fx-background-radius:10;"));
-
-        // Sự kiện click
-        row.setOnMouseClicked(e -> System.out.println("Mở file: " + file.originalFilename));
-
-        return row;
     }
 
     private String formatSize(Long size) {
@@ -185,48 +268,30 @@ public class DashboardController {
 
     private void createCircularProgress(StackPane stackPane, double percent, Color color) {
         stackPane.getChildren().clear();
-        // Đặt kích thước cố định cho StackPane để tránh layout bị nhảy
         stackPane.setPrefSize(80, 80);
-
-        // 1. Tạo Group để chứa 2 vòng tròn
-        // Lưu ý: Dùng tọa độ (0,0) cho Arc để dễ căn chỉnh trong Group
-
-        // --- Vòng tròn nền ---
         Arc bgArc = new Arc(0, 0, 35, 35, 90, 360);
         bgArc.setType(ArcType.OPEN);
-        bgArc.setStroke(Color.rgb(255, 255, 255, 0.3));
+        bgArc.setStroke(Color.rgb(255, 255, 255, 0.4));
         bgArc.setStrokeWidth(8);
-        bgArc.setFill(Color.TRANSPARENT); // Quan trọng: Không tô màu nền
+        bgArc.setFill(Color.TRANSPARENT);
 
-        // --- Vòng tròn tiến trình ---
         Arc progArc = new Arc(0, 0, 35, 35, 90, 0);
         progArc.setType(ArcType.OPEN);
         progArc.setStroke(color);
         progArc.setStrokeWidth(8);
-        progArc.setStrokeLineCap(StrokeLineCap.ROUND); // Bo tròn 2 đầu cho đẹp
-        progArc.setFill(Color.TRANSPARENT); // Quan trọng: Không tô màu nền
+        progArc.setStrokeLineCap(StrokeLineCap.ROUND);
+        progArc.setFill(Color.TRANSPARENT);
 
-        // 2. Nhóm chúng lại vào Group
-        // Group sẽ lấy kích thước theo phần tử lớn nhất (bgArc), giúp vị trí cố định
-        javafx.scene.Group circleGroup = new javafx.scene.Group(bgArc, progArc);
-
-        // 3. Label phần trăm
         Label lbl = new Label((int) percent + "%");
-        lbl.setTextFill(color);
+        if(color.equals(Color.WHITE)) lbl.setTextFill(Color.WHITE);
+        else lbl.setTextFill(Color.web("#333"));
         lbl.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
-        // Thêm Group và Label vào StackPane
-        // StackPane sẽ tự động căn giữa Group và Label đè lên nhau
-        stackPane.getChildren().addAll(circleGroup, lbl);
+        stackPane.getChildren().addAll(new javafx.scene.Group(bgArc, progArc), lbl);
 
-        // 4. Animation
         Timeline timeline = new Timeline(
-                new KeyFrame(Duration.ZERO, e -> {
-                    progArc.setLength(0);
-                    lbl.setText("0%");
-                }),
+                new KeyFrame(Duration.ZERO, e -> { progArc.setLength(0); lbl.setText("0%"); }),
                 new KeyFrame(Duration.seconds(1), e -> {
-                    // Giá trị âm để chạy theo chiều kim đồng hồ
                     progArc.setLength(-(percent * 3.6));
                     lbl.setText((int) percent + "%");
                 })

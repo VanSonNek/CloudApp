@@ -40,15 +40,13 @@ public class ClientApiHandler {
         public String deletedDate;
     }
 
-    // ✅ BỔ SUNG: Class ShareResponse bị thiếu
     public static class ShareResponse {
         public Long shareId;
-        public String fileName; // Tên file hoặc folder
-        public String ownerEmail; // Email người chia sẻ
-        public String sharedDate;
-        public boolean isFolder;
-        public Long fileId;
-        public Long folderId;
+        public String itemName;      // Tên file hoặc folder
+        public String itemType;      // "FILE" hoặc "FOLDER"
+        public Long itemId;          // ID của file hoặc folder
+        public String senderEmail;   // Email người gửi
+        public String sharedDate;    // Ngày chia sẻ
     }
 
     public static class DashboardMetrics {
@@ -74,7 +72,7 @@ public class ClientApiHandler {
         try {
             String json = String.format("{\"username\": \"%s\", \"password\": \"%s\"}", u, p);
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(SERVER_URL + "/auth/login")) // Đã sửa đúng path api/auth/login
+                    .uri(URI.create(SERVER_URL + "/auth/login"))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(json))
                     .build();
@@ -82,14 +80,11 @@ public class ClientApiHandler {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
                 JsonObject obj = gson.fromJson(response.body(), JsonObject.class);
-                boolean authenticated;
                 if (obj.has("accessToken")) {
                     jwtToken = obj.get("accessToken").getAsString();
-                    authenticated = true;
                     return true;
                 } else if (obj.has("token")) {
                     jwtToken = obj.get("token").getAsString();
-                    authenticated = true;
                     return true;
                 }
             }
@@ -101,7 +96,7 @@ public class ClientApiHandler {
         try {
             String json = String.format("{\"username\": \"%s\", \"email\": \"%s\", \"password\": \"%s\"}", username, email, password);
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(SERVER_URL + "/api/auth/register"))
+                    .uri(URI.create(SERVER_URL + "/auth/register"))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(json))
                     .build();
@@ -159,7 +154,6 @@ public class ClientApiHandler {
 
     public static List<ListItem.FileDto> getRecentFiles() {
         try {
-            // Gọi API lấy danh sách file gần đây
             HttpRequest req = createRequestBuilder("/api/files/recent").GET().build();
             HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
 
@@ -178,22 +172,18 @@ public class ClientApiHandler {
             if (parentId != null) json.addProperty("parentDirectoryId", parentId);
 
             HttpRequest req = createRequestBuilder("/api/directories/create")
-                    .header("Content-Type", "application/json") // ⚠️ BẮT BUỘC PHẢI CÓ
+                    .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(json)))
                     .build();
 
             HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
 
-            // Log kết quả để debug
             if (res.statusCode() == 200) {
                 JsonObject responseJson = gson.fromJson(res.body(), JsonObject.class);
-
-                // Server Spring Boot thường trả về "id", nhưng kiểm tra kỹ
                 if (responseJson.has("id")) return responseJson.get("id").getAsLong();
                 if (responseJson.has("folderId")) return responseJson.get("folderId").getAsLong();
             } else {
                 System.err.println("❌ Lỗi tạo folder: Code " + res.statusCode());
-                System.err.println("   Nội dung lỗi: " + res.body());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -217,51 +207,83 @@ public class ClientApiHandler {
 
     // --- 4. SHARE (CHIA SẺ) ---
 
-    // ✅ BỔ SUNG: Hàm lấy danh sách file được share
-    public static List<ShareResponse> getSharedFiles() {
-        try {
-            HttpRequest req = createRequestBuilder("/api/share/list").GET().build();
-            HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
-            if (res.statusCode() == 200) {
-                Type listType = new TypeToken<List<ShareResponse>>(){}.getType();
-                return gson.fromJson(res.body(), listType);
-            }
-        } catch (Exception e) { e.printStackTrace(); }
-        return Collections.emptyList();
-    }
-
-    // Hàm thực hiện chia sẻ
-    public static boolean shareItem(Long itemId, String email, boolean isFolder) {
+    public static boolean shareItem(String email, Long itemId, boolean isFolder) {
         try {
             JsonObject json = new JsonObject();
             json.addProperty("email", email);
-            if (isFolder) json.addProperty("folderId", itemId);
-            else json.addProperty("fileId", itemId);
+            json.addProperty("itemId", itemId);
+            json.addProperty("isFolder", isFolder);
 
-            HttpRequest req = createRequestBuilder("/api/share/create")
+            HttpRequest request = createRequestBuilder("/api/shares/share")
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(json)))
                     .build();
-            return client.send(req, HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
-        } catch (Exception e) { return false; }
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return response.statusCode() == 200;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static List<ShareResponse> getSharedFiles() {
+        try {
+            HttpRequest request = createRequestBuilder("/api/shares/received").GET().build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                Type listType = new TypeToken<List<ShareResponse>>(){}.getType();
+                return gson.fromJson(response.body(), listType);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Collections.emptyList();
     }
 
     // --- 5. DOWNLOAD & UTILS ---
 
-    // ✅ BỔ SUNG: Hàm download file về thư mục tạm (Dùng để mở hoặc preview)
     public static File downloadFileToTemp(Long fileId, String fileName) {
         try {
-            HttpRequest req = createRequestBuilder("/api/files/download/" + fileId).GET().build();
-            HttpResponse<InputStream> res = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
+            HttpRequest request = createRequestBuilder("/api/files/download/" + fileId).GET().build();
+            HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
-            if (res.statusCode() == 200) {
-                // Tạo file tạm với prefix, suffix
-                String suffix = fileName.contains(".") ? fileName.substring(fileName.lastIndexOf(".")) : ".tmp";
-                File tempFile = File.createTempFile("cloud_temp_", suffix);
-                Files.copy(res.body(), tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            if (response.statusCode() == 200) {
+                String extension = ".tmp";
+                int i = fileName.lastIndexOf('.');
+                if (i > 0) extension = fileName.substring(i);
+
+                File tempFile = File.createTempFile("skybox_open_", extension);
+                tempFile.deleteOnExit();
+
+                Files.copy(response.body(), tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 return tempFile;
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // [QUAN TRỌNG] Chỉ giữ lại hàm này, XÓA hàm handleDownloadFolder chứa giao diện
+    public static File downloadFolderToTemp(Long folderId, String folderName) {
+        try {
+            HttpRequest request = createRequestBuilder("/api/directories/download/" + folderId).GET().build();
+            HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+            if (response.statusCode() == 200) {
+                File tempFile = File.createTempFile("skybox_folder_", ".zip");
+                tempFile.deleteOnExit();
+
+                Files.copy(response.body(), tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                return tempFile;
+            } else {
+                System.out.println("Download Folder Failed: " + response.statusCode());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
@@ -279,15 +301,12 @@ public class ClientApiHandler {
         return Collections.emptyList();
     }
 
-    public static boolean restoreItem(Long trashId) { // Mặc định cũ, có thể không dùng nữa
+    public static boolean restoreItem(Long trashId) {
         return restoreItem(trashId, false);
     }
 
-    // Hàm restore mới có phân biệt file/folder
     public static boolean restoreItem(Long trashId, boolean isFolder) {
         try {
-            // API Server có thể là /api/trash/restore/{id} hoặc cần thêm params
-            // Giả sử server tự biết dựa vào ID
             HttpRequest req = createRequestBuilder("/api/trash/restore/" + trashId)
                     .POST(HttpRequest.BodyPublishers.noBody())
                     .build();
@@ -297,8 +316,7 @@ public class ClientApiHandler {
 
     public static boolean deleteForever(Long trashId) {
         try {
-            HttpRequest req = createRequestBuilder("/api/trash/" + trashId)
-                    .DELETE().build();
+            HttpRequest req = createRequestBuilder("/api/trash/" + trashId).DELETE().build();
             return client.send(req, HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
         } catch (Exception e) { return false; }
     }
@@ -320,7 +338,43 @@ public class ClientApiHandler {
         } catch (Exception e) { e.printStackTrace(); }
         return new DashboardMetrics();
     }
-    // --- BỔ SUNG: DTO CHO PROFILE ---
+
+    public static List<ListItem.FileDto> getStarredFiles() {
+        try {
+            HttpRequest req = createRequestBuilder("/api/files/starred").GET().build();
+            HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
+            if (res.statusCode() == 200) {
+                Type listType = new TypeToken<List<ListItem.FileDto>>(){}.getType();
+                return gson.fromJson(res.body(), listType);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return Collections.emptyList();
+    }
+
+    public static boolean toggleStar(Long id, boolean isFolder, boolean starred) {
+        try {
+            String url = "/api/files/toggle-star?id=" + id + "&isFolder=" + isFolder + "&starred=" + starred;
+            HttpRequest req = createRequestBuilder(url).PUT(HttpRequest.BodyPublishers.noBody()).build();
+            return client.send(req, HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
+        } catch (Exception e) { return false; }
+    }
+
+    // --- HÀM TÌM KIẾM ---
+    public static DirectoryContentResponse searchFiles(String keyword) {
+        try {
+            String encodedKeyword = java.net.URLEncoder.encode(keyword, java.nio.charset.StandardCharsets.UTF_8);
+            String url = "/api/files/search?query=" + encodedKeyword;
+            HttpRequest request = createRequestBuilder(url).GET().build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                return gson.fromJson(response.body(), DirectoryContentResponse.class);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return null;
+    }
+
+    // --- PROFILE ---
     public static class UserProfileDto {
         public Long id;
         public String email;
@@ -329,18 +383,14 @@ public class ClientApiHandler {
         public String nationality;
     }
 
-    // --- BỔ SUNG: HÀM LẤY PROFILE ---
     public static UserProfileDto getUserProfile() {
         try {
             HttpRequest request = createRequestBuilder("/api/account/profile").GET().build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
             if (response.statusCode() == 200) {
                 return gson.fromJson(response.body(), UserProfileDto.class);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return null;
     }
 }

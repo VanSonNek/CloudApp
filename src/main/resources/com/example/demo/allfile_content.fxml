@@ -28,9 +28,11 @@
             <Region HBox.hgrow="ALWAYS"/>
 
             <HBox prefWidth="740">
-                <TextField prefHeight="40" prefWidth="717"
-                           promptText="Search in Skybox"
-                           style="-fx-background-radius: 10; -fx-padding: 8;"/>
+                <TextField fx:id="searchField"
+                           prefHeight="40" prefWidth="717"
+                           promptText="Search"
+                           style="-fx-background-radius: 10; -fx-padding: 8; -fx-border-color: transparent; -fx-background-color: #F1F3F4;"
+                           HBox.hgrow="ALWAYS"/>
             </HBox>
 
             <ImageView fitHeight="20" fitWidth="20">

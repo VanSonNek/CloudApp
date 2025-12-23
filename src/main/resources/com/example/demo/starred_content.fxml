@@ -29,8 +29,9 @@
             <Region HBox.hgrow="ALWAYS"/>
 
             <HBox prefWidth="800">
-                <TextField prefHeight="40" prefWidth="750.0"
-                           promptText="Search in Skybox"
+                <TextField fx:id="searchField"
+                           prefHeight="40" prefWidth="750.0"
+                           promptText="Search"
                            style="-fx-background-radius: 10; -fx-padding: 8;"/>
             </HBox>
 
