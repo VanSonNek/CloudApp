@@ -70,10 +70,10 @@
 
                 <VBox spacing="5">
                     <Label fx:id="fullNameLabel"
-                           text="SƠn nè "
+                           text=""
                            style="-fx-font-size:18px; -fx-font-weight:bold;"/>
                     <Label fx:id="emailLabel"
-                           text="sondaica@gmail.com"
+                           text=""
                            style="-fx-text-fill:#777777; -fx-font-size:13px;"/>
                 </VBox>
 
@@ -131,58 +131,22 @@
                            style="-fx-font-size:12px; -fx-text-fill:#555555;"/>
 
                     <!-- Row 3: fields DOB / Country -->
-                    <DatePicker GridPane.rowIndex="3" GridPane.columnIndex="0"
+                    <DatePicker fx:id="dobPicker"
+                                GridPane.rowIndex="3" GridPane.columnIndex="0"
                                 prefHeight="35"
                                 style="-fx-background-radius:5;"/>
-                    <ComboBox GridPane.rowIndex="3" GridPane.columnIndex="1"
+
+                    <ComboBox fx:id="countryBox"
+                              GridPane.rowIndex="3" GridPane.columnIndex="1"
                               prefHeight="35"
-                              promptText="VietNam"
+                              promptText="Select Country"
                               style="-fx-background-radius:5;"/>
                 </GridPane>
             </VBox>
 
             <Separator/>
 
-            <!-- ========== PREFERENCES ========== -->
-            <VBox spacing="15">
-                <Label text="Preferences"
-                       style="-fx-font-size:14px; -fx-font-weight:bold;"/>
 
-                <!-- Appearance -->
-                <HBox spacing="25" alignment="CENTER_LEFT">
-                    <Label text="Appearance:"
-                           style="-fx-font-weight:bold; -fx-font-size:13px;"/>
-
-                    <RadioButton text="System default"
-                                 toggleGroup="$appearanceGroup"/>
-
-                    <RadioButton text="Light"
-                                 selected="true"
-                                 toggleGroup="$appearanceGroup"/>
-
-                    <RadioButton text="Dark"
-                                 toggleGroup="$appearanceGroup"/>
-                </HBox>
-
-                <!-- Date Format -->
-                <HBox spacing="25" alignment="CENTER_LEFT">
-                    <Label text="Date Format:"
-                           style="-fx-font-weight:bold; -fx-font-size:13px;"/>
-
-                    <RadioButton text="Format for my language and country."
-                                 wrapText="true"
-                                 maxWidth="200"
-                                 toggleGroup="$dateFormatGroup"/>
-
-                    <RadioButton text="Use the ISO date and time format"
-                                 wrapText="true"
-                                 maxWidth="220"
-                                 selected="true"
-                                 toggleGroup="$dateFormatGroup"/>
-                </HBox>
-            </VBox>
-
-            <Separator/>
 
             <!-- ========== CLOSE ACCOUNT ========== -->
             <VBox spacing="10">
@@ -201,7 +165,7 @@
 
                     <Pane HBox.hgrow="ALWAYS"/>
 
-                    <Button text="Close Account"
+                    <Button text="Log Out"
                             style="-fx-background-color:#FF4D4F;
                                    -fx-text-fill:#FFFFFF;
                                    -fx-font-weight:bold;

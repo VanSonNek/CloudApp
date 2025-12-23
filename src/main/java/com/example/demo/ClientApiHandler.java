@@ -320,4 +320,27 @@ public class ClientApiHandler {
         } catch (Exception e) { e.printStackTrace(); }
         return new DashboardMetrics();
     }
+    // --- BỔ SUNG: DTO CHO PROFILE ---
+    public static class UserProfileDto {
+        public Long id;
+        public String email;
+        public String username;
+        public String dateOfBirth;
+        public String nationality;
+    }
+
+    // --- BỔ SUNG: HÀM LẤY PROFILE ---
+    public static UserProfileDto getUserProfile() {
+        try {
+            HttpRequest request = createRequestBuilder("/api/account/profile").GET().build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                return gson.fromJson(response.body(), UserProfileDto.class);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
