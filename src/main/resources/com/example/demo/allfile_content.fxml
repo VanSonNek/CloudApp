@@ -54,6 +54,16 @@
 
             <Region HBox.hgrow="ALWAYS"/>
 
+            <Button fx:id="btnBack"
+                    text="← Quay lại"
+                    prefHeight="36"
+                    disable="true"
+                    style="-fx-background-color: transparent; -fx-border-color: #dcdcdc; -fx-border-radius: 5; -fx-text-fill: #5f6368; -fx-cursor: hand; -fx-font-weight: bold;">
+                <tooltip>
+                    <Tooltip text="Quay lại thư mục trước"/>
+                </tooltip>
+            </Button>
+
             <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-padding: 0 15 0 0;">
 
                 <MenuButton fx:id="btnNew"

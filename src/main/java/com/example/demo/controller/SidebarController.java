@@ -38,11 +38,6 @@ public class SidebarController {
             mainController.loadContent("share_content.fxml");
         });
 
-        btnInbox.setOnAction(e -> {
-            highlight(btnInbox);
-            mainController.loadContent("inbox_content.fxml");
-        });
-
         btnAccount.setOnAction(e -> {
             highlight(btnAccount);
             mainController.loadContent("account_content.fxml");
@@ -67,7 +62,6 @@ public class SidebarController {
         btnDashboard.getStyleClass().remove("sidebar-btn-active");
         btnAllFile.getStyleClass().remove("sidebar-btn-active");
         btnShared.getStyleClass().remove("sidebar-btn-active");
-        btnInbox.getStyleClass().remove("sidebar-btn-active");
         btnAccount.getStyleClass().remove("sidebar-btn-active");
         btnStarred.getStyleClass().remove("sidebar-btn-active");
         btnTrash.getStyleClass().remove("sidebar-btn-active");

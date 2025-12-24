@@ -52,19 +52,20 @@
                 <Insets bottom="15" left="1" right="25" top="0"/>
             </padding>
 
-            <Button fx:id="btnBack"
-                    text="⬅ Back"
-                    disable="true"
-                    style="-fx-background-color: transparent;
-                           -fx-text-fill: #5f6368;
-                           -fx-font-weight: bold;
-                           -fx-font-size: 14px;
-                           -fx-cursor: hand;"/>
-
             <Label text="Share"
                    style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
 
             <Region HBox.hgrow="ALWAYS"/>
+
+            <Button fx:id="btnBack"
+                    text="← Quay lại"
+                    prefHeight="36"
+                    disable="true"
+                    style="-fx-background-color: transparent; -fx-border-color: #dcdcdc; -fx-border-radius: 5; -fx-text-fill: #5f6368; -fx-cursor: hand; -fx-font-weight: bold;">
+                <tooltip>
+                    <Tooltip text="Quay lại thư mục trước"/>
+                </tooltip>
+            </Button>
 
             <Button text="Sort by Date"
                     fx:id="sortByDateBtn"

@@ -57,7 +57,7 @@ public class AllfileController {
 
         if (btnBack != null) {
             btnBack.setOnAction(e -> handleBack());
-            btnBack.setDisable(true);
+            btnBack.setDisable(false);
         }
 
         // 2. Load dữ liệu ban đầu

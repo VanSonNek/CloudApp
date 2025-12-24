@@ -9,7 +9,7 @@
       xmlns="http://javafx.com/javafx/17.0.12"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.example.demo.controller.TrashController"
-      style="-fx-background-color: #F2F2F2;">
+      style="-fx-background-color: #F8F9FA;">
 
     <padding>
         <Insets top="0" right="0" bottom="20" left="10"/>
@@ -19,7 +19,7 @@
         <HBox alignment="CENTER_LEFT"
               prefHeight="70.0" prefWidth="1000.0"
               spacing="25"
-              style="-fx-background-color: #FFFFFF; -fx-background-radius: 5;">
+              style="-fx-background-color: #FFFFFF; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 1);">
             <padding>
                 <Insets bottom="15" left="15" right="25" top="15"/>
             </padding>
@@ -29,14 +29,14 @@
             <HBox prefWidth="800">
                 <TextField prefHeight="40" prefWidth="750.0"
                            promptText="Search in Skybox"
-                           style="-fx-background-radius: 10; -fx-padding: 8;"/>
+                           style="-fx-background-radius: 8; -fx-background-color: #f1f3f4; -fx-padding: 8; -fx-border-color: transparent;"/>
             </HBox>
 
-            <ImageView fitHeight="20" fitWidth="20">
+            <ImageView fitHeight="20" fitWidth="20" opacity="0.6">
                 <image><Image url="@imgs/bell.png"/></image>
             </ImageView>
 
-            <ImageView fitHeight="25" fitWidth="25">
+            <ImageView fitHeight="25" fitWidth="25" opacity="0.8">
                 <image><Image url="@imgs/man.png"/></image>
             </ImageView>
         </HBox>
@@ -47,33 +47,36 @@
               prefWidth="1000.0"
               spacing="10">
             <padding>
-                <Insets bottom="15" left="1" right="25" top="0"/>
+                <Insets bottom="5" left="5" right="25" top="5"/>
             </padding>
 
-            <Label text="Trash" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+            <Label text="Thùng rác" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
 
             <Region HBox.hgrow="ALWAYS"/>
 
-            <Button fx:id="btnDeleteAll" text="Delete All"
-                    style="-fx-background-color: #ff6257; -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 6 14; -fx-cursor: hand;"/>
+            <Button fx:id="btnDeleteAll" text="Dọn sạch thùng rác"
+                    style="-fx-background-color: #ff6b6b; -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 16; -fx-cursor: hand; -fx-font-weight: bold;"/>
         </HBox>
     </HBox>
 
-    <Separator prefWidth="1000">
-        <style>
-            -fx-background-color: #D0D0D0;
-        </style>
-    </Separator>
+    <Separator prefWidth="1000" opacity="0.5"/>
 
     <HBox alignment="CENTER" VBox.vgrow="ALWAYS">
-        <VBox alignment="CENTER" prefWidth="1000" spacing="15" VBox.vgrow="ALWAYS">
+        <VBox alignment="CENTER" prefWidth="1000" spacing="10" VBox.vgrow="ALWAYS">
 
             <GridPane prefWidth="1000"
-                      style="-fx-background-color: #FFFFFF; -fx-padding: 10 0; -fx-background-radius: 5;">
+                      style="-fx-background-color: #FFFFFF; -fx-padding: 12 15; -fx-background-radius: 6; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.03), 3, 0, 0, 1);">
                 <columnConstraints>
-                    <ColumnConstraints prefWidth="550"/> <ColumnConstraints prefWidth="140"/> <ColumnConstraints prefWidth="100"/> <ColumnConstraints prefWidth="120"/> </columnConstraints>
+                    <ColumnConstraints percentWidth="45"/>
+                    <ColumnConstraints percentWidth="20" halignment="CENTER"/>
+                    <ColumnConstraints percentWidth="15" halignment="CENTER"/>
+                    <ColumnConstraints percentWidth="20" halignment="RIGHT"/>
+                </columnConstraints>
 
-                <Label text="Name" style="-fx-font-weight: bold; -fx-padding: 0 0 0 10;"/>
+                <Label text="Tên mục" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d; -fx-font-size: 13px;"/>
+                <Label text="Ngày xóa" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d; -fx-font-size: 13px;" GridPane.columnIndex="1"/>
+                <Label text="Kích thước" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d; -fx-font-size: 13px;" GridPane.columnIndex="2"/>
+                <Label text="Hành động" style="-fx-font-weight: bold; -fx-text-fill: #7f8c8d; -fx-font-size: 13px;" GridPane.columnIndex="3"/>
             </GridPane>
 
             <ListView fx:id="trashListView"

@@ -24,7 +24,7 @@
             <image><Image url="@imgs/cloud.png"/></image>
         </ImageView>
 
-        <Label text="Skybox."
+        <Label text="DRIVEMINI"
                style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
     </HBox>
 
@@ -58,16 +58,6 @@
             <graphic>
                 <ImageView fitHeight="20" fitWidth="20">
                     <image><Image url="@imgs/manyavt.png"/></image>
-                </ImageView>
-            </graphic>
-        </Button>
-
-        <Button fx:id="btnInbox" text="Inbox"
-                graphicTextGap="12" prefHeight="44"
-                styleClass="sidebar-btn">
-            <graphic>
-                <ImageView fitHeight="20" fitWidth="20">
-                    <image><Image url="@imgs/chat2.png"/></image>
                 </ImageView>
             </graphic>
         </Button>
@@ -106,29 +96,5 @@
 
     <Region VBox.vgrow="ALWAYS"/>
 
-    <!-- BOTTOM UPGRADE CARD -->
-    <VBox spacing="10"
-          prefWidth="200"
-          style="-fx-background-color: #3EA9F0; -fx-background-radius: 14; -fx-padding: 20;">
-
-        <Label text="64% Used"
-               style="-fx-font-size: 18px; -fx-text-fill: white; -fx-font-weight: bold;"/>
-
-        <Label text="640 GB of 1000 GB"
-               style="-fx-text-fill: #EAF7FF;"/>
-
-        <ProgressBar progress="0.64"
-                     prefWidth="150"
-                     style="-fx-accent: white;"/>
-
-        <Region VBox.vgrow="ALWAYS"/>
-
-        <Button text="Upgrade Now"
-                prefWidth="150"
-                style="-fx-background-color: white;
-                       -fx-text-fill: #3EA9F0;
-                       -fx-background-radius: 8;
-                       -fx-font-weight: bold;"/>
-    </VBox>
 
 </VBox>

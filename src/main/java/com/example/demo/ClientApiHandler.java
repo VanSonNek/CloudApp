@@ -316,7 +316,7 @@ public class ClientApiHandler {
 
     public static boolean deleteForever(Long trashId) {
         try {
-            HttpRequest req = createRequestBuilder("/api/trash/" + trashId).DELETE().build();
+            HttpRequest req = createRequestBuilder("/api/trash/delete/" + trashId).DELETE().build();
             return client.send(req, HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
         } catch (Exception e) { return false; }
     }
@@ -326,6 +326,19 @@ public class ClientApiHandler {
             HttpRequest req = createRequestBuilder("/api/files/" + fileId).DELETE().build();
             return client.send(req, HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
         } catch (Exception e) { return false; }
+    }
+
+    public static boolean deleteAllTrash() {
+        try {
+            HttpRequest request = createRequestBuilder("/api/trash/delete-all")
+                    .DELETE()
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return response.statusCode() == 200;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static DashboardMetrics getDashboardMetrics() {
