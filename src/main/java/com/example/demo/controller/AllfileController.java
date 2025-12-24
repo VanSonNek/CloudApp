@@ -16,15 +16,13 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
@@ -153,106 +151,167 @@ public class AllfileController {
         });
     }
 
-    // --- TẠO GIAO DIỆN FOLDER ---
-    private VBox createFolderItem(ListItem.DirectoryDto dir) {
-        VBox vbox = new VBox(5);
-        vbox.setAlignment(Pos.CENTER);
-        vbox.setPadding(new Insets(10));
-        vbox.setPrefSize(100, 100);
+    // --- TẠO GIAO DIỆN FOLDER (ĐÃ XÓA FILES VÀ GB) ---
+    private Node createFolderItem(ListItem.DirectoryDto dir) {
+        // 1. Container chính
+        VBox folderCard = new VBox();
+        // Đã giảm chiều cao từ 130 xuống 110 cho gọn
+        folderCard.setPrefSize(220, 110);
 
+        // Style: Nền trắng, bo góc 18, bóng đổ nhẹ
+        String styleNormal = "-fx-background-color: white; " +
+                "-fx-background-radius: 18; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.04), 10, 0, 0, 3); " +
+                "-fx-cursor: hand;";
+
+        String styleHover =  "-fx-background-color: white; " +
+                "-fx-background-radius: 18; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 15, 0, 0, 5); " +
+                "-fx-cursor: hand;";
+
+        folderCard.setStyle(styleNormal);
+        folderCard.setPadding(new Insets(15, 20, 15, 20));
+
+        // --- HÀNG 1: ICON VÀ MENU ---
+        HBox topRow = new HBox();
+        topRow.setAlignment(Pos.CENTER_LEFT);
+
+        // Icon Folder
         ImageView icon = new ImageView();
         try {
-            icon.setImage(new Image(getClass().getResourceAsStream("/icons/folder.png")));
-        } catch (Exception e) {}
-        icon.setFitWidth(48); icon.setFitHeight(48);
+            icon.setImage(new Image(getClass().getResourceAsStream("/com/example/demo/imgs/folder.png")));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        icon.setFitWidth(36); icon.setFitHeight(36); icon.setPreserveRatio(true);
+
+        Region spacerTop = new Region();
+        HBox.setHgrow(spacerTop, Priority.ALWAYS);
+
+        // --- XỬ LÝ MENU 3 CHẤM ---
+        Label menuDots = new Label("...");
+        menuDots.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #9E9E9E; -fx-cursor: hand; -fx-padding: -5 0 0 0;");
+
+        // Menu chức năng
+        ContextMenu contextMenu = new ContextMenu();
+        contextMenu.setStyle("-fx-font-size: 13px; -fx-background-radius: 8;");
+
+        MenuItem itemShare = new MenuItem("Chia sẻ");
+        itemShare.setOnAction(ev -> handleShareAction(dir.id, dir.name, true));
+
+        MenuItem itemDownload = new MenuItem("Tải xuống (.zip)");
+        itemDownload.setOnAction(ev -> handleDownloadFolder(dir.id, dir.name));
+
+        MenuItem itemDelete = new MenuItem("Xóa thư mục");
+        itemDelete.setStyle("-fx-text-fill: #E53935;");
+        itemDelete.setOnAction(ev -> handleDeleteFolder(dir.id));
+
+        contextMenu.getItems().addAll(itemShare, itemDownload, new SeparatorMenuItem(), itemDelete);
+
+        menuDots.setOnMouseClicked(e -> {
+            e.consume();
+            contextMenu.show(menuDots, Side.BOTTOM, 0, 0);
+        });
+
+        topRow.getChildren().addAll(icon, spacerTop, menuDots);
+
+        // --- HÀNG 2: TÊN FOLDER ---
+        Region spacerMid = new Region();
+        // Tăng khoảng cách spacer này lên một chút để tên nằm đẹp hơn (tùy chỉnh)
+        spacerMid.setPrefHeight(15);
 
         Label nameLbl = new Label(dir.name);
-        nameLbl.setMaxWidth(90);
-        if (dir.name.length() > 12) nameLbl.setText(dir.name.substring(0, 9) + "...");
+        nameLbl.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #333;");
+        nameLbl.setMaxWidth(180);
+        nameLbl.setTextOverrun(OverrunStyle.ELLIPSIS);
 
-        vbox.getChildren().addAll(icon, nameLbl);
-        vbox.setStyle("-fx-background-radius: 5; -fx-cursor: hand;");
-        vbox.setOnMouseEntered(e -> vbox.setStyle("-fx-background-color: #e3f2fd; -fx-background-radius: 5; -fx-cursor: hand;"));
-        vbox.setOnMouseExited(e -> vbox.setStyle("-fx-background-color: transparent;"));
+        // --- ĐÃ XÓA HÀNG 3 (FILES & GB) ---
 
-        // Click đúp để vào thư mục
-        vbox.setOnMouseClicked(e -> {
+        // --- GHÉP CÁC PHẦN LẠI ---
+        // Chỉ còn topRow, khoảng cách và tên
+        folderCard.getChildren().addAll(topRow, spacerMid, nameLbl);
+
+        // --- XỬ LÝ SỰ KIỆN CHUNG ---
+        folderCard.setOnMouseEntered(e -> folderCard.setStyle(styleHover));
+        folderCard.setOnMouseExited(e -> {
+            if (!contextMenu.isShowing()) folderCard.setStyle(styleNormal);
+        });
+
+        folderCard.setOnMouseClicked(e -> {
+            if (e.getTarget() == menuDots || (e.getTarget() instanceof Node && ((Node)e.getTarget()).getParent() == menuDots)) {
+                return;
+            }
             if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2) {
-                if (isSearching) {
-                    if (searchField != null) searchField.clear();
-                    isSearching = false;
-                }
+                if (isSearching) { if (searchField != null) searchField.clear(); isSearching = false; }
                 historyStack.push(currentDirectoryId == null ? -1L : currentDirectoryId);
                 currentDirectoryId = dir.id;
                 loadFiles();
             }
         });
 
-        // --- MENU CHUỘT PHẢI CHO FOLDER ---
-        ContextMenu cm = new ContextMenu();
-
-        // 1. Chia sẻ
-        MenuItem shareItem = new MenuItem("Chia sẻ thư mục");
-        shareItem.setOnAction(ev -> handleShareAction(dir.id, dir.name, true));
-
-        // 2. Tải xuống (ĐÃ CÓ HÀM XỬ LÝ Ở DƯỚI)
-        MenuItem downloadItem = new MenuItem("Tải xuống (.zip)");
-        downloadItem.setOnAction(ev -> handleDownloadFolder(dir.id, dir.name));
-
-        // 3. Xóa
-        MenuItem deleteItem = new MenuItem("Xóa thư mục");
-        deleteItem.setStyle("-fx-text-fill: red;");
-        deleteItem.setOnAction(ev -> handleDeleteFolder(dir.id));
-
-        cm.getItems().addAll(shareItem, downloadItem, new SeparatorMenuItem(), deleteItem);
-        vbox.setOnContextMenuRequested(ev -> cm.show(vbox, ev.getScreenX(), ev.getScreenY()));
-
-        return vbox;
+        return folderCard;
     }
+    // --- TẠO GIAO DIỆN FILE (FIX LỖI 2 MŨI TÊN) ---
+    private Node createFileItem(ListItem.FileDto file) {
+        VBox card = new VBox();
+        card.setPrefSize(220, 180);
 
-    // --- TẠO GIAO DIỆN FILE ---
-    private StackPane createFileItem(ListItem.FileDto file) {
-        StackPane cardContainer = new StackPane();
-        cardContainer.setPrefSize(130, 160);
-        cardContainer.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 3, 0, 0, 1);");
+        // Style chung
+        String styleNormal = "-fx-background-color: transparent; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5); -fx-cursor: hand;";
+        String styleHover = "-fx-background-color: transparent; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 15, 0, 0, 8); -fx-cursor: hand;";
 
-        VBox contentBox = new VBox(8);
-        contentBox.setAlignment(Pos.CENTER);
-        contentBox.setPadding(new Insets(25, 5, 5, 5));
+        card.setStyle(styleNormal);
 
+        // --- PHẦN 1: THUMBNAIL ---
+        StackPane thumbnail = new StackPane();
+        thumbnail.setPrefHeight(130);
+        thumbnail.setMinHeight(130);
+        thumbnail.setStyle("-fx-background-color: #FFF8E1; -fx-background-radius: 18 18 0 0;"); // Màu vàng nhạt
+
+        ImageView mainIcon = new ImageView(IconHelper.getFileIcon("FILE", file.originalFilename));
+        mainIcon.setFitWidth(50); mainIcon.setFitHeight(50); mainIcon.setPreserveRatio(true);
+        thumbnail.getChildren().add(mainIcon);
+
+        // --- PHẦN 2: FOOTER ---
+        HBox footer = new HBox(5);
+        footer.setAlignment(Pos.CENTER_LEFT);
+        footer.setPadding(new Insets(10, 10, 10, 15));
+        footer.setStyle("-fx-background-color: white; -fx-background-radius: 0 0 18 18;");
+        footer.setPrefHeight(50);
+
+        // Icon nhỏ
+        ImageView smallIcon = new ImageView(IconHelper.getFileIcon("FILE", file.originalFilename));
+        smallIcon.setFitWidth(16); smallIcon.setFitHeight(16);
+
+        // Tên file
         Label nameLbl = new Label(file.originalFilename);
+        nameLbl.setStyle("-fx-font-family: 'Segoe UI'; -fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #333;");
         nameLbl.setMaxWidth(110);
-        nameLbl.setWrapText(true);
-        nameLbl.setAlignment(Pos.CENTER);
-        nameLbl.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-alignment: center;");
-        if (file.originalFilename.length() > 30) nameLbl.setText(file.originalFilename.substring(0, 27) + "...");
+        nameLbl.setTextOverrun(OverrunStyle.ELLIPSIS);
 
-        ImageView icon = new ImageView(IconHelper.getFileIcon("FILE", file.originalFilename));
-        icon.setFitWidth(50); icon.setFitHeight(50);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        contentBox.getChildren().addAll(nameLbl, icon);
-
-        // Action Bar (Star & Menu 3 chấm)
-        HBox actionBar = new HBox(0);
-        actionBar.setAlignment(Pos.TOP_RIGHT);
-        actionBar.setPadding(new Insets(5, 5, 0, 0));
-        actionBar.setMaxHeight(140);
-
+        // --- A. NÚT NGÔI SAO (STAR) ---
         ToggleButton btnStar = new ToggleButton(file.isStarred ? "★" : "☆");
-        String starStyle = "-fx-background-color: transparent; -fx-font-size: 14px; -fx-cursor: hand; -fx-padding: 4 5 0 0; ";
-        btnStar.setStyle(starStyle + (file.isStarred ? "-fx-text-fill: #f1c40f;" : "-fx-text-fill: #bdc3c7;"));
+        String starStyle = "-fx-background-color: transparent; -fx-padding: 0; -fx-font-size: 18px; -fx-cursor: hand; ";
+        btnStar.setStyle(starStyle + (file.isStarred ? "-fx-text-fill: #FBC02D;" : "-fx-text-fill: #BDBDBD;"));
 
         btnStar.setOnAction(e -> {
             e.consume();
             boolean newState = !btnStar.getText().equals("★");
             btnStar.setText(newState ? "★" : "☆");
-            btnStar.setStyle(starStyle + (newState ? "-fx-text-fill: #f1c40f;" : "-fx-text-fill: #bdc3c7;"));
+            btnStar.setStyle(starStyle + (newState ? "-fx-text-fill: #FBC02D;" : "-fx-text-fill: #BDBDBD;"));
             Executors.newSingleThreadExecutor().execute(() -> ClientApiHandler.toggleStar(file.id, false, newState));
         });
 
-        // Menu 3 chấm
-        MenuButton menuBtn = new MenuButton("⋮");
-        menuBtn.setStyle("-fx-background-color: transparent; -fx-font-size: 16px; -fx-padding: 0; -fx-cursor: hand;");
+        // --- B. NÚT MENU MŨI TÊN (SỬA LẠI DÙNG LABEL + CONTEXT MENU) ---
+        // Thay vì MenuButton, dùng Label để không bị dính mũi tên mặc định của hệ thống
+        Label menuLabel = new Label("▼");
+        menuLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: #757575; -fx-cursor: hand; -fx-padding: 0 0 0 5;");
+
+        // Tạo ContextMenu chứa các chức năng
+        ContextMenu contextMenu = new ContextMenu();
 
         MenuItem itemShare = new MenuItem("Chia sẻ");
         itemShare.setOnAction(e -> handleShareAction(file.id, file.originalFilename, false));
@@ -264,39 +323,41 @@ public class AllfileController {
         itemDelete.setStyle("-fx-text-fill: red;");
         itemDelete.setOnAction(e -> handleDeleteFile(file.id));
 
-        menuBtn.getItems().addAll(itemShare, itemDownload, new SeparatorMenuItem(), itemDelete);
+        contextMenu.getItems().addAll(itemShare, itemDownload, new SeparatorMenuItem(), itemDelete);
 
-        actionBar.getChildren().addAll(btnStar, menuBtn);
-        actionBar.setVisible(false);
-
-        // Hiệu ứng Hover
-        cardContainer.setOnMouseEntered(e -> {
-            cardContainer.setStyle("-fx-background-color: #f0f8ff; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);");
-            actionBar.setVisible(true);
+        // Sự kiện khi nhấn vào mũi tên "▼"
+        menuLabel.setOnMouseClicked(e -> {
+            e.consume(); // Chặn không cho click lan ra thẻ (không mở file)
+            contextMenu.show(menuLabel, Side.BOTTOM, 0, 0); // Hiện menu ngay dưới mũi tên
         });
 
-        cardContainer.setOnMouseExited(e -> {
-            if (menuBtn.isShowing()) return;
-            cardContainer.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 3, 0, 0, 1);");
-            if (!btnStar.getText().equals("★")) actionBar.setVisible(false);
-            else menuBtn.setVisible(false);
+        // Thêm vào Footer
+        footer.getChildren().addAll(smallIcon, nameLbl, spacer, btnStar, menuLabel);
+
+        // Ghép vào Card
+        card.getChildren().addAll(thumbnail, footer);
+
+        // --- XỬ LÝ SỰ KIỆN CHUNG ---
+        card.setOnMouseEntered(e -> card.setStyle(styleHover));
+        card.setOnMouseExited(e -> {
+            if (!contextMenu.isShowing()) card.setStyle(styleNormal);
         });
 
-        // Click đúp mở file
-        cardContainer.setOnMouseClicked(mouseEvent -> {
-            if (mouseEvent.getTarget() instanceof Button || mouseEvent.getTarget() instanceof MenuButton ||
-                    (mouseEvent.getTarget() instanceof Node && ((Node)mouseEvent.getTarget()).getParent() instanceof MenuButton)) {
+        card.setOnMouseClicked(mouseEvent -> {
+            Node target = (Node) mouseEvent.getTarget();
+            // Kiểm tra xem có click trúng nút Star, MenuLabel hay không
+            if (target instanceof Button || target instanceof ToggleButton || target instanceof Label && target == menuLabel ||
+                    (target.getParent() instanceof ToggleButton)) {
                 return;
             }
+
             if (mouseEvent.getButton() == MouseButton.PRIMARY && mouseEvent.getClickCount() == 2) {
                 handleOpenFile(file.id, file.originalFilename);
             }
         });
 
-        cardContainer.getChildren().addAll(contentBox, actionBar);
-        return cardContainer;
+        return card;
     }
-
     // --- CÁC HÀM XỬ LÝ (ACTIONS) ---
 
     private void handleShareAction(Long itemId, String itemName, boolean isFolder) {

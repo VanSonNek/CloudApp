@@ -40,22 +40,8 @@
 
             <!-- Tabs: Account / Notification / Security / Contacts and Chats -->
             <VBox spacing="8">
-                <HBox spacing="30">
-                    <Label text="Account"
-                           style="-fx-font-size:14px; -fx-font-weight:bold;
-                                  -fx-border-color:transparent transparent #F6C51A transparent;
-                                  -fx-border-width:0 0 2 0;
-                                  -fx-padding:0 0 8 0;"/>
 
-                    <Label text="Notification"
-                           style="-fx-font-size:14px; -fx-text-fill:#777777;"/>
 
-                    <Label text="Security"
-                           style="-fx-font-size:14px; -fx-text-fill:#777777;"/>
-
-                    <Label text="Contacts and Chats"
-                           style="-fx-font-size:14px; -fx-text-fill:#777777;"/>
-                </HBox>
 
                 <Separator/>
             </VBox>
@@ -79,12 +65,13 @@
 
                 <Pane HBox.hgrow="ALWAYS"/>
 
-                <Button text="Update Profile Picture"
-                        style="-fx-background-color:#FFC107;
-                               -fx-background-radius:5;
-                               -fx-text-fill:#FFFFFF;
-                               -fx-font-weight:bold;
-                               -fx-padding:8 18 8 18;"/>
+                <Button text="Log Out"
+                        onAction="#handleLogout"
+                        style="-fx-background-color:#f53439;
+               -fx-background-radius:5;
+               -fx-text-fill:#FFFFFF;
+               -fx-font-weight:bold;
+               -fx-padding:8 18 8 18;"/>
             </HBox>
 
             <Separator/>
@@ -112,12 +99,12 @@
                            GridPane.rowIndex="0" GridPane.columnIndex="1"
                            style="-fx-font-size:12px; -fx-text-fill:#555555;"/>
 
-                    <!-- Row 1: fields First / Last -->
-                    <TextField text="Sơn Nè "
+                    <TextField fx:id="firstNameField"
                                GridPane.rowIndex="1" GridPane.columnIndex="0"
                                prefHeight="35"
                                style="-fx-background-radius:5;"/>
-                    <TextField text="Ahihi"
+
+                    <TextField fx:id="lastNameField"
                                GridPane.rowIndex="1" GridPane.columnIndex="1"
                                prefHeight="35"
                                style="-fx-background-radius:5;"/>
@@ -148,31 +135,8 @@
 
 
 
-            <!-- ========== CLOSE ACCOUNT ========== -->
-            <VBox spacing="10">
-                <Label text="Close Account"
-                       style="-fx-font-size:14px; -fx-font-weight:bold;"/>
 
-                <HBox spacing="20" alignment="CENTER_LEFT">
-                    <VBox spacing="5">
-                        <Label text="Warning:"
-                               style="-fx-text-fill:#FF4D4F; -fx-font-weight:bold;"/>
-                        <Label text="You will not be able to access your account data, your SKYBOX contacts or conversations after you confirm this action."
-                               wrapText="true"
-                               prefWidth="420"
-                               style="-fx-font-size:12px; -fx-text-fill:#555555;"/>
-                    </VBox>
 
-                    <Pane HBox.hgrow="ALWAYS"/>
-
-                    <Button text="Log Out"
-                            style="-fx-background-color:#FF4D4F;
-                                   -fx-text-fill:#FFFFFF;
-                                   -fx-font-weight:bold;
-                                   -fx-background-radius:5;
-                                   -fx-padding:10 24 10 24;"/>
-                </HBox>
-            </VBox>
 
         </VBox>
     </HBox>

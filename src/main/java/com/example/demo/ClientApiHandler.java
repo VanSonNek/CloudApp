@@ -379,6 +379,7 @@ public class ClientApiHandler {
         public Long id;
         public String email;
         public String username;
+        public String lastname;
         public String dateOfBirth;
         public String nationality;
     }
@@ -392,5 +393,12 @@ public class ClientApiHandler {
             }
         } catch (Exception e) { e.printStackTrace(); }
         return null;
+    }
+    // Trong file ClientApiHandler.java
+
+    public static void logout() {
+        jwtToken = null; // Xóa token xác thực
+        // Nếu có lưu cache user profile hay dữ liệu tạm nào khác thì xóa luôn ở đây
+        System.out.println("Đã xóa token, đăng xuất thành công khỏi client.");
     }
 }
