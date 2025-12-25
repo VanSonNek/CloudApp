@@ -1,0 +1,78 @@
+/* Nền tổng thể */
+.root {
+    -fx-background-color: #F4F6F8;
+}
+
+/* --- HEADER CỦA BẢNG --- */
+.table-header {
+    -fx-background-color: transparent;
+    -fx-padding: 0 15 0 15;
+}
+
+.table-header .label {
+    -fx-text-fill: #637381; /* Màu xám chuyên nghiệp */
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-alignment: CENTER-LEFT;
+}
+
+/* --- LIST VIEW --- */
+.flat-list {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.flat-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 6 0 6 0; /* Khoảng cách giữa các dòng */
+    -fx-border-width: 0;
+}
+
+/* --- ITEM CARD (Từng dòng dữ liệu) --- */
+.share-item-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 10; /* Bo tròn góc */
+    -fx-effect: dropshadow(three-pass-box, rgba(145, 158, 171, 0.15), 5, 0, 0, 2); /* Đổ bóng nhẹ */
+    -fx-padding: 0 15 0 15;
+    -fx-cursor: hand;
+}
+
+/* Hiệu ứng khi di chuột vào */
+.share-item-card:hover {
+    -fx-background-color: #F9FAFB;
+    -fx-effect: dropshadow(three-pass-box, rgba(145, 158, 171, 0.25), 8, 0, 0, 3);
+    -fx-translate-y: -1; /* Nhích nhẹ lên */
+}
+
+/* --- TEXT STYLES --- */
+.primary-text {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #212B36;
+}
+
+.secondary-text {
+    -fx-font-size: 13px;
+    -fx-text-fill: #637381;
+}
+
+/* --- BADGES (Nhãn loại file) --- */
+.badge-folder {
+    -fx-background-color: rgba(24, 144, 255, 0.15); /* Xanh dương nhạt */
+    -fx-text-fill: #1890FF;
+    -fx-background-radius: 4;
+    -fx-padding: 4 8 4 8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.badge-file {
+    -fx-background-color: rgba(34, 197, 94, 0.15); /* Xanh lá nhạt */
+    -fx-text-fill: #22C55E;
+    -fx-background-radius: 4;
+    -fx-padding: 4 8 4 8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}

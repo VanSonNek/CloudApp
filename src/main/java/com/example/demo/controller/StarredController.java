@@ -76,63 +76,79 @@ public class StarredController {
         }
     }
 
-    // Class nội bộ để hiển thị giao diện từng dòng (Giữ nguyên logic cũ)
     private class StarredFileCell extends ListCell<ListItem.FileDto> {
         @Override
         protected void updateItem(ListItem.FileDto item, boolean empty) {
             super.updateItem(item, empty);
+
             if (empty || item == null) {
                 setGraphic(null);
+                setText(null);
+                setStyle("-fx-background-color: transparent;"); // Ẩn các ô trống
             } else {
+                // 1. Tạo Container chính (GridPane) cho row
                 GridPane grid = new GridPane();
-                grid.setHgap(10);
+                grid.getStyleClass().add("file-card"); // Áp dụng CSS class "file-card"
+                grid.setMinHeight(60); // Chiều cao cố định cho đẹp
                 grid.setAlignment(Pos.CENTER_LEFT);
 
-                // Cột 1: Icon + Tên
-                HBox nameBox = new HBox(10);
+                // 2. Thiết lập cột (Phải khớp % với Header bên FXML)
+                ColumnConstraints col1 = new ColumnConstraints(); col1.setPercentWidth(50);
+                ColumnConstraints col2 = new ColumnConstraints(); col2.setPercentWidth(20);
+                ColumnConstraints col3 = new ColumnConstraints(); col3.setPercentWidth(15);
+                ColumnConstraints col4 = new ColumnConstraints(); col4.setPercentWidth(15); col4.setHalignment(javafx.geometry.HPos.CENTER);
+
+                grid.getColumnConstraints().addAll(col1, col2, col3, col4);
+
+                // --- CỘT 1: ICON + TÊN FILE ---
+                HBox nameBox = new HBox(15);
                 nameBox.setAlignment(Pos.CENTER_LEFT);
+
+                // Icon (Nên dùng ảnh SVG hoặc ảnh chất lượng cao)
                 ImageView icon = new ImageView(IconHelper.getFileIcon("FILE", item.originalFilename));
-                icon.setFitWidth(24); icon.setFitHeight(24);
+                icon.setFitWidth(32);
+                icon.setFitHeight(32);
+
+                // Tên file
                 Label nameLabel = new Label(item.originalFilename);
-                nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+                nameLabel.getStyleClass().add("file-name"); // CSS class
+
                 nameBox.getChildren().addAll(icon, nameLabel);
 
-                // Cột 2: Người sở hữu (Mockup)
-                Label ownerLabel = new Label("Me");
+                // --- CỘT 2: OWNER ---
+                Label ownerLabel = new Label("Me"); // Mockup
+                ownerLabel.getStyleClass().add("file-info");
 
-                // Cột 3: Kích thước
+                // --- CỘT 3: SIZE ---
                 String sizeStr = (item.size != null) ? (item.size / 1024) + " KB" : "0 KB";
                 Label sizeLabel = new Label(sizeStr);
+                sizeLabel.getStyleClass().add("file-info");
 
-                // Cột 4: Nút Star (Bỏ thích)
+                // --- CỘT 4: NÚT STAR ---
                 ToggleButton btnStar = new ToggleButton("★");
                 btnStar.setSelected(true);
-                btnStar.setStyle("-fx-background-color: transparent; -fx-text-fill: #f1c40f; -fx-font-size: 16px; -fx-cursor: hand;");
+                btnStar.getStyleClass().add("star-button"); // CSS class
 
+                // Xử lý sự kiện click
                 btnStar.setOnAction(e -> {
-                    // [QUAN TRỌNG] Xóa khỏi cả 2 danh sách để đồng bộ
+                    // Xóa khỏi ListView ngay lập tức để tạo cảm giác mượt mà
                     getListView().getItems().remove(item);
                     masterData.remove(item);
 
+                    // Gọi API ngầm
                     Executors.newSingleThreadExecutor().execute(() -> {
                         ClientApiHandler.toggleStar(item.id, false, false);
                     });
                 });
 
-                grid.getColumnConstraints().addAll(
-                        new ColumnConstraints(550),
-                        new ColumnConstraints(140),
-                        new ColumnConstraints(100),
-                        new ColumnConstraints(120)
-                );
-
+                // 3. Add vào Grid
                 grid.add(nameBox, 0, 0);
                 grid.add(ownerLabel, 1, 0);
                 grid.add(sizeLabel, 2, 0);
                 grid.add(btnStar, 3, 0);
 
                 setGraphic(grid);
+                setText(null);
             }
-        }
-    }
+        }}
 }

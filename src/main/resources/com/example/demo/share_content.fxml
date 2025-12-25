@@ -5,109 +5,67 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox spacing="18"
+<VBox spacing="20"
       xmlns="http://javafx.com/javafx/17.0.12"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.example.demo.controller.ShareController"
-      stylesheets="@css/starred.css"
-      style="-fx-background-color: #F2F2F2;">
+      stylesheets="@css/share.css"
+      style="-fx-background-color: #F4F6F8;">
 
     <padding>
-        <Insets top="0" right="0" bottom="20" left="10"/>
+        <Insets top="20" right="30" bottom="20" left="30"/>
     </padding>
 
-    <HBox alignment="CENTER">
-        <HBox alignment="CENTER_LEFT"
-              prefHeight="70.0" prefWidth="1000.0"
-              spacing="25"
-              style="-fx-background-color: #FFFFFF; -fx-background-radius: 5;">
-            <padding>
-                <Insets bottom="15" left="15" right="25" top="15"/>
-            </padding>
-
-            <Region HBox.hgrow="ALWAYS"/>
-
-            <HBox prefWidth="800">
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <HBox alignment="CENTER_LEFT" spacing="15" HBox.hgrow="ALWAYS">
+            <HBox alignment="CENTER_LEFT"
+                  style="-fx-background-color: #FFFFFF; -fx-background-radius: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 3, 0, 0, 1);"
+                  prefWidth="400">
+                <padding><Insets top="5" right="10" bottom="5" left="15"/></padding>
+                <ImageView fitHeight="16" fitWidth="16" opacity="0.5">
+                    <image><Image url="@imgs/folder.png"/></image>
+                </ImageView>
                 <TextField fx:id="searchField"
-                           prefHeight="40" prefWidth="750.0"
-                           promptText="Search"
-                           style="-fx-background-radius: 10; -fx-padding: 8;"/>
+                           prefHeight="35" HBox.hgrow="ALWAYS"
+                           promptText="Search shared files..."
+                           style="-fx-background-color: transparent; -fx-prompt-text-fill: #919EAB; -fx-text-fill: #212B36;"/>
             </HBox>
-
-            <ImageView fitHeight="20" fitWidth="20">
-                <image><Image url="@imgs/bell.png"/></image>
-            </ImageView>
-
-            <ImageView fitHeight="25" fitWidth="25">
-                <image><Image url="@imgs/man.png"/></image>
-            </ImageView>
         </HBox>
+
+        <ImageView fitHeight="40" fitWidth="40">
+            <image><Image url="@imgs/man.png"/></image>
+        </ImageView>
     </HBox>
 
-    <HBox alignment="CENTER">
-        <HBox alignment="CENTER_LEFT"
-              prefWidth="1000.0"
-              spacing="10">
-            <padding>
-                <Insets bottom="15" left="1" right="25" top="0"/>
-            </padding>
+    <HBox alignment="CENTER_LEFT" spacing="15">
+        <Label text="Shared with me" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #212B36;"/>
 
-            <Label text="Share"
-                   style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+        <Region HBox.hgrow="ALWAYS"/>
 
-            <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnBack"
+                text="← Back"
+                disable="true"
+                style="-fx-background-color: #FFFFFF; -fx-text-fill: #637381; -fx-background-radius: 6; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 2, 0, 0, 1);"/>
 
-            <Button fx:id="btnBack"
-                    text="← Quay lại"
-                    prefHeight="36"
-                    disable="true"
-                    style="-fx-background-color: transparent; -fx-border-color: #dcdcdc; -fx-border-radius: 5; -fx-text-fill: #5f6368; -fx-cursor: hand; -fx-font-weight: bold;">
-                <tooltip>
-                    <Tooltip text="Quay lại thư mục trước"/>
-                </tooltip>
-            </Button>
-
-            <Button text="Sort by Date"
-                    fx:id="sortByDateBtn"
-                    style="-fx-background-color: #4285f4;
-                       -fx-text-fill: white;
-                       -fx-background-radius: 6;
-                       -fx-padding: 6 14;"/>
-        </HBox>
+        <Button fx:id="sortByDateBtn"
+                text="Sort by Date"
+                style="-fx-background-color: #FFFFFF; -fx-text-fill: #637381; -fx-background-radius: 6; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 2, 0, 0, 1);"/>
     </HBox>
 
-    <Separator prefWidth="1000">
-        <style>
-            -fx-background-color: #D0D0D0;
-        </style>
-    </Separator>
+    <Separator opacity="0.5"/>
 
-    <HBox alignment="CENTER" VBox.vgrow="ALWAYS">
-        <VBox alignment="CENTER" prefWidth="1000" spacing="15" VBox.vgrow="ALWAYS">
+    <GridPane styleClass="table-header">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="50"/> <ColumnConstraints percentWidth="25"/> <ColumnConstraints percentWidth="15"/> <ColumnConstraints percentWidth="10" halignment="CENTER"/> </columnConstraints>
 
-            <GridPane prefWidth="1000" styleClass="table-header" style="-fx-background-color: #FFFFFF;">
-                <columnConstraints>
-                    <ColumnConstraints prefWidth="550"/>
-                    <ColumnConstraints prefWidth="140"/>
-                    <ColumnConstraints prefWidth="120"/>
-                    <ColumnConstraints prefWidth="120"/>
-                </columnConstraints>
+        <Label text="NAME" GridPane.columnIndex="0"/>
+        <Label text="SHARED BY" GridPane.columnIndex="1"/>
+        <Label text="DATE" GridPane.columnIndex="2"/>
+        <Label text="TYPE" GridPane.columnIndex="3"/>
+    </GridPane>
 
-                <padding>
-                    <Insets top="10" bottom="10" left="10" right="10"/>
-                </padding>
+    <ListView fx:id="shareListView"
+              styleClass="flat-list"
+              VBox.vgrow="ALWAYS"/>
 
-                <Label styleClass="th" text="Name"/>
-                <Label styleClass="th" text="Sharer" GridPane.columnIndex="1"/>
-                <Label styleClass="th" text="Sharing day" GridPane.columnIndex="2"/>
-                <Label styleClass="th" text="Type" GridPane.columnIndex="3"/>
-            </GridPane>
-
-            <ListView fx:id="shareListView"
-                      prefWidth="1000"
-                      styleClass="flat-list"
-                      focusTraversable="false"
-                      VBox.vgrow="ALWAYS"/>
-        </VBox>
-    </HBox>
 </VBox>

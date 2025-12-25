@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ResourceBundle;
 import java.util.Objects;
+import javafx.scene.control.*;
 
 public class AccountController implements Initializable {
 
@@ -67,6 +68,46 @@ public class AccountController implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    // === THÊM MỚI: Xử lý nút Update ===
+    @FXML
+    private void handleUpdate(ActionEvent event) {
+        // 1. Lấy dữ liệu từ giao diện
+        String firstName = firstNameField.getText().trim();
+        String lastName = lastNameField.getText().trim();
+        String nationality = countryBox.getValue();
+        LocalDate dob = dobPicker.getValue();
+
+        // 2. Validate đơn giản (tùy chọn)
+        if (firstName.isEmpty() || lastName.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Warning", "First name and Last name cannot be empty!");
+            return;
+        }
+
+        // 3. Gọi API cập nhật (chạy trên thread khác để không đơ UI)
+        new Thread(() -> {
+            String dobString = (dob != null) ? dob.toString() : null; // Chuyển LocalDate sang String yyyy-MM-dd
+
+            boolean success = ClientApiHandler.updateUserProfile(firstName, lastName, nationality, dobString);
+
+            Platform.runLater(() -> {
+                if (success) {
+                    // Cập nhật lại Label hiển thị tên ngay lập tức
+                    fullNameLabel.setText(firstName + " " + lastName);
+                    showAlert(Alert.AlertType.INFORMATION, "Success", "Profile updated successfully!");
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to update profile. Please try again.");
+                }
+            });
+        }).start();
+    }
+    // Hàm phụ trợ để hiển thị thông báo
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     @Override

@@ -64,6 +64,13 @@
                 </VBox>
 
                 <Pane HBox.hgrow="ALWAYS"/>
+                <Button text="Update"
+                        onAction="#handleUpdate"
+                        style="-fx-background-color:#337efb;
+               -fx-background-radius:5;
+               -fx-text-fill:#FFFFFF;
+               -fx-font-weight:bold;
+               -fx-padding:8 18 8 18;"/>
 
                 <Button text="Log Out"
                         onAction="#handleLogout"

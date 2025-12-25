@@ -414,4 +414,25 @@ public class ClientApiHandler {
         // Nếu có lưu cache user profile hay dữ liệu tạm nào khác thì xóa luôn ở đây
         System.out.println("Đã xóa token, đăng xuất thành công khỏi client.");
     }
+    // === THÊM MỚI: Hàm gửi request update ===
+    public static boolean updateUserProfile(String firstname, String lastname, String nationality, String dob) {
+        try {
+            JsonObject json = new JsonObject();
+            json.addProperty("firstname", firstname);
+            json.addProperty("lastname", lastname);
+            json.addProperty("nationality", nationality);
+            json.addProperty("dateOfBirth", dob); // Server sẽ parse chuỗi yyyy-MM-dd thành LocalDate
+
+            HttpRequest request = createRequestBuilder("/api/account/profile")
+                    .header("Content-Type", "application/json")
+                    .PUT(HttpRequest.BodyPublishers.ofString(gson.toJson(json)))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return response.statusCode() == 200;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

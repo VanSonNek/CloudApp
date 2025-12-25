@@ -24,7 +24,7 @@
             <image><Image url="@imgs/cloud.png"/></image>
         </ImageView>
 
-        <Label text="DRIVEMINI"
+        <Label text="SkyBox"
                style="-fx-font-size: 22px; -fx-font-weight: bold;"/>
     </HBox>
 

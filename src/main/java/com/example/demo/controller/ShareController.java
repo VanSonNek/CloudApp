@@ -218,73 +218,91 @@ public class ShareController {
         handleOpenFile(item);
     }
 
-    // ================= CLASS GIAO DIỆN TỪNG DÒNG =================
+    // ================= CLASS GIAO DIỆN TỪNG DÒNG (ĐÃ NÂNG CẤP) =================
     private class ShareListCell extends ListCell<ShareResponse> {
         @Override
         protected void updateItem(ShareResponse item, boolean empty) {
             super.updateItem(item, empty);
+
             if (empty || item == null) {
                 setGraphic(null);
                 setText(null);
+                // Reset style để không bị lưu style cũ
                 setStyle("-fx-background-color: transparent;");
                 setContextMenu(null);
             } else {
+                // 1. Tạo Grid Container (Card)
                 GridPane grid = new GridPane();
+                grid.getStyleClass().add("share-item-card"); // Class CSS quan trọng
+                grid.setMinHeight(60); // Chiều cao cố định cho đẹp
                 grid.setAlignment(Pos.CENTER_LEFT);
-                grid.getColumnConstraints().addAll(
-                        new ColumnConstraints(550), new ColumnConstraints(140),
-                        new ColumnConstraints(120), new ColumnConstraints(120)
-                );
 
-                // 1. Name
-                HBox nameBox = new HBox(10);
+                // 2. Thiết lập cột (Phần trăm phải khớp với Header bên FXML)
+                ColumnConstraints col1 = new ColumnConstraints(); col1.setPercentWidth(50);
+                ColumnConstraints col2 = new ColumnConstraints(); col2.setPercentWidth(25);
+                ColumnConstraints col3 = new ColumnConstraints(); col3.setPercentWidth(15);
+                ColumnConstraints col4 = new ColumnConstraints(); col4.setPercentWidth(10); col4.setHalignment(javafx.geometry.HPos.CENTER);
+
+                grid.getColumnConstraints().addAll(col1, col2, col3, col4);
+
+                // --- CỘT 1: ICON + TÊN FILE ---
+                HBox nameBox = new HBox(15);
                 nameBox.setAlignment(Pos.CENTER_LEFT);
+
                 ImageView icon = new ImageView();
                 boolean isFolder = "FOLDER".equals(item.itemType);
                 try {
-                    if (isFolder) icon.setImage(new Image(getClass().getResourceAsStream("/icons/folder.png")));
+                    // Logic lấy icon (giữ nguyên logic của bạn)
+                    if (isFolder) icon.setImage(new Image(getClass().getResourceAsStream("/icons/folder.png"))); // Đảm bảo đường dẫn đúng
                     else icon.setImage(IconHelper.getFileIcon("FILE", item.itemName));
-                } catch (Exception e) {}
-                icon.setFitWidth(24); icon.setFitHeight(24);
+                } catch (Exception e) {
+                    // Fallback nếu lỗi ảnh
+                }
+                icon.setFitWidth(32); icon.setFitHeight(32); // Icon to hơn chút cho đẹp
+
                 Label nameLbl = new Label(item.itemName);
-                nameLbl.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
+                nameLbl.getStyleClass().add("primary-text"); // CSS Text đậm
+
                 nameBox.getChildren().addAll(icon, nameLbl);
-                grid.add(nameBox, 0, 0);
 
-                // 2. Sharer
-                Label sharerLbl = new Label(item.senderEmail);
-                sharerLbl.setStyle("-fx-text-fill: #666; -fx-font-size: 12px;");
-                grid.add(sharerLbl, 1, 0);
+                // --- CỘT 2: NGƯỜI GỬI ---
+                // Cắt ngắn email nếu quá dài
+                String senderDisplay = item.senderEmail;
+                if (senderDisplay != null && senderDisplay.length() > 25) {
+                    senderDisplay = senderDisplay.substring(0, 22) + "...";
+                }
+                Label sharerLbl = new Label(senderDisplay);
+                sharerLbl.getStyleClass().add("secondary-text"); // CSS Text nhạt
 
-                // 3. Date
+                // --- CỘT 3: NGÀY THÁNG ---
                 Label dateLbl = new Label(item.sharedDate);
-                dateLbl.setStyle("-fx-text-fill: #666; -fx-font-size: 12px;");
-                grid.add(dateLbl, 2, 0);
+                dateLbl.getStyleClass().add("secondary-text");
 
-                // 4. Type
-                Label typeLbl = new Label(isFolder ? "Folder" : "File");
-                typeLbl.setStyle(isFolder ? "-fx-background-color: #e3f2fd; -fx-text-fill: #1976d2; -fx-padding: 3 10; -fx-background-radius: 10; -fx-font-size: 11px; -fx-font-weight: bold;"
-                        : "-fx-background-color: #f5f5f5; -fx-text-fill: #616161; -fx-padding: 3 10; -fx-background-radius: 10; -fx-font-size: 11px;");
-                HBox typeBox = new HBox(typeLbl); typeBox.setAlignment(Pos.CENTER_LEFT);
-                grid.add(typeBox, 3, 0);
+                // --- CỘT 4: LOẠI (BADGE) ---
+                Label typeBadge = new Label(isFolder ? "FOLDER" : "FILE");
+                // Class CSS khác nhau cho màu sắc khác nhau
+                typeBadge.getStyleClass().add(isFolder ? "badge-folder" : "badge-file");
+
+                // Thêm vào Grid
+                grid.add(nameBox, 0, 0);
+                grid.add(sharerLbl, 1, 0);
+                grid.add(dateLbl, 2, 0);
+                grid.add(typeBadge, 3, 0);
 
                 setGraphic(grid);
 
-                // Context Menu
+                // --- CONTEXT MENU (Giữ nguyên logic cũ) ---
                 ContextMenu cm = new ContextMenu();
-
-                MenuItem openItem = new MenuItem("Mở");
+                MenuItem openItem = new MenuItem("Open");
                 openItem.setOnAction(e -> handleItemClick(item));
-
-                MenuItem downloadItem = new MenuItem("Tải xuống");
+                MenuItem downloadItem = new MenuItem("Download");
                 downloadItem.setOnAction(e -> handleDownload(item));
 
                 if (!isFolder) {
-                    MenuItem viewItem = new MenuItem("Xem nhanh");
+                    MenuItem viewItem = new MenuItem("Quick View");
                     viewItem.setOnAction(e -> handleViewContent(item));
                     cm.getItems().add(viewItem);
                 }
-
                 cm.getItems().addAll(openItem, downloadItem);
                 setContextMenu(cm);
 
@@ -292,6 +310,5 @@ public class ShareController {
                     if (e.getClickCount() == 2 && !isEmpty()) handleItemClick(item);
                 });
             }
-        }
-    }
+        }}
 }
