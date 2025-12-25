@@ -343,7 +343,7 @@ public class ClientApiHandler {
 
     public static DashboardMetrics getDashboardMetrics() {
         try {
-            HttpRequest req = createRequestBuilder("/api/files/dashboard/metrics").GET().build();
+            HttpRequest req = createRequestBuilder("/api/dashboard/metrics").GET().build();
             HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
             if (res.statusCode() == 200) {
                 return gson.fromJson(res.body(), DashboardMetrics.class);
